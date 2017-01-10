@@ -11,13 +11,13 @@ import numpy
 ###Settings#############################################################################################################
 sim_dir_name = "2D Unit Circle" #Which dataset to run
 
-n_points_used_for_dynamics = 300 #How many points are available from which to infer dynamics
+n_points_used_for_dynamics = 500 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 500
 n_points_used_for_clusters = 200 #How many cluster to use in Kernal method
 n_neighbors_cov = 20 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 10 #How many short distances are kept for each cluster point
-n_hidden_tangent = 10 #How many nodes in hidden layer that learns tangent plane
-n_hidden_int = 10 #How many nodes in hidden layer that learns intrinsic dynamics
+n_hidden_tangent = 16 #How many nodes in hidden layer that learns tangent plane
+n_hidden_int = 16 #How many nodes in hidden layer that learns intrinsic dynamics
 ########################################################################################################################
 
 sim_dir = './' + sim_dir_name
@@ -34,11 +34,11 @@ intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype
 measurement_variance = numpy.load(sim_dir + '/' + 'measurement_variance.npy').astype(dtype=dtype)
 
 
-ts = time.time()
-ts = round(ts)
-dir_name = '/{}'.format(ts)
-full_dir_name = './' + 'Runs' + '/' + sim_dir_name + dir_name
-os.makedirs(full_dir_name)
+#ts = time.time()
+#ts = round(ts)
+#dir_name = '/{}'.format(ts)
+#full_dir_name = './' + 'Runs' + '/' + sim_dir_name + dir_name
+#os.makedirs(full_dir_name)
 
 dim_intrinsic = intrinsic_process_base.shape[0]
 dim_measurement = noisy_sensor_base.shape[0]
@@ -60,16 +60,16 @@ points_dynamics_plot_index = numpy.random.choice(n_points, size=n_points_used_fo
 color_map = create_color_map(intrinsic_process_base)
 
 print_process(intrinsic_process_base, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Intrinsic Process")
-plt.savefig(full_dir_name + '/' + 'intrinsic_base.png', bbox_inches='tight')
+#plt.savefig(full_dir_name + '/' + 'intrinsic_base.png', bbox_inches='tight')
 
 print_process(noisy_sensor_base, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Measurement Process")
-plt.savefig(full_dir_name + '/' + 'sensor_base.png', bbox_inches='tight')
+#plt.savefig(full_dir_name + '/' + 'sensor_base.png', bbox_inches='tight')
 
 print_dynamics(intrinsic_process_base, intrinsic_process_step, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Intrinsic Process Dynamics")
-plt.savefig(full_dir_name + '/' + 'intrinsic_dynamics.png', bbox_inches='tight')
+#plt.savefig(full_dir_name + '/' + 'intrinsic_dynamics.png', bbox_inches='tight')
 
 print_dynamics(noisy_sensor_base, noisy_sensor_step, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Measurement Process Dynamics")
-plt.savefig(full_dir_name + '/' + 'sensor_dynamics.png', bbox_inches='tight')
+#plt.savefig(full_dir_name + '/' + 'sensor_dynamics.png', bbox_inches='tight')
 
 
 ###Intrinsic Metric Learning Net########################################################################################

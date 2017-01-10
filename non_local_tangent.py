@@ -102,7 +102,7 @@ class non_local_tangent_net(object):
 
         self.b_int_2 = theano.shared(value=numpy.zeros((self.n_hidden_int,), dtype=theano.config.floatX), name='b_int_2', borrow=True)
 
-        self.b_int_3 = theano.shared(value=numpy.asarray([5.0, 0., 0., 5.], dtype=theano.config.floatX), name='b_int_3', borrow=True)
+        self.b_int_3 = theano.shared(value=numpy.asarray([1.0, 0., 0., 1.], dtype=theano.config.floatX), name='b_int_3', borrow=True)
 
         #self.b_int_3 = theano.shared(value=numpy.zeros((self.dim_jacobian_int,), dtype=theano.config.floatX), name='b_int_3', borrow=True)
 
@@ -241,17 +241,17 @@ class non_local_tangent_net(object):
 
         fix1_fact = 1. - fix1_T
         fix2_fact = 1. - fix2_T
-        #lr_t = learning_rate * (T.sqrt(fix2_fact) / fix1_fact)
+        lr_t = learning_rate * (T.sqrt(fix2_fact) / fix1_fact)
         #lr_t = learning_rate * (1/ fix1_fact)
-        lr_t = learning_rate
+        #lr_t = learning_rate
         for p, g in zip(params, grads):
             #g = T.clip(g, -1, 1)
             m = theano.shared(p.get_value() * 0.)
             v = theano.shared(p.get_value() * 0.)
             m_t = (b1 * g) + ((1. - b1) * m)
             v_t = (b2 * T.sqr(g)) + ((1. - b2) * v)
-            #g_t = m_t / (T.sqrt(v_t) + e)
-            g_t = m_t
+            g_t = m_t / (T.sqrt(v_t) + e)
+            #g_t = m_t
             p_t = p - (lr_t * g_t)
             #p_t = p - (learning_rate * g)
             updates.append((m, m_t))
