@@ -102,7 +102,7 @@ class non_local_tangent_net(object):
 
         self.b_int_2 = theano.shared(value=numpy.zeros((self.n_hidden_int,), dtype=theano.config.floatX), name='b_int_2', borrow=True)
 
-        self.b_int_3 = theano.shared(value=numpy.asarray([1.0, 0., 0., 1.], dtype=theano.config.floatX), name='b_int_3', borrow=True)
+        self.b_int_3 = theano.shared(value=numpy.asarray([5.0, 0., 0., 5.], dtype=theano.config.floatX), name='b_int_3', borrow=True)
 
         #self.b_int_3 = theano.shared(value=numpy.zeros((self.dim_jacobian_int,), dtype=theano.config.floatX), name='b_int_3', borrow=True)
 
@@ -265,8 +265,8 @@ class non_local_tangent_net(object):
         return updates
 
     def train_net(self, noisy_sensor_base, noisy_sensor_step):
-        max_iteration_tangent = 701
-        max_updates_int = 701
+        max_iteration_tangent = 501
+        max_updates_int = 501
         n_points = noisy_sensor_base.shape[1]
 
         n_valid_points = int(numpy.ceil(n_points*0.2))
