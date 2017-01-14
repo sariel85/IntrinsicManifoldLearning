@@ -102,7 +102,7 @@ class non_local_tangent_net(object):
 
         self.b_int_2 = theano.shared(value=numpy.zeros((self.n_hidden_int,), dtype=theano.config.floatX), name='b_int_2', borrow=True)
 
-        self.b_int_3 = theano.shared(value=numpy.asarray([0.5, 0., 0., 0.5], dtype=theano.config.floatX), name='b_int_3', borrow=True)
+        self.b_int_3 = theano.shared(value=numpy.asarray([0.05, 0., 0., 0.05], dtype=theano.config.floatX), name='b_int_3', borrow=True)
 
         #self.b_int_3 = theano.shared(value=numpy.zeros((self.dim_jacobian_int,), dtype=theano.config.floatX), name='b_int_3', borrow=True)
 
@@ -199,14 +199,12 @@ class non_local_tangent_net(object):
                           T.batched_dot(jacobian, coeffs) - (
                           inputs_step.T - inputs_base.T)) ** 2, 1) / self.measurement_variance).mean()
 
-        cost_int = (T.log(det_jacobian_squared) - T.log(det_jacobian_int_squared) + T.sum(
-            T.batched_dot(jacobian_int, coeffs) ** 2,
-            1) / self.intrinsic_variance).mean()
+        cost_int = (T.log(det_jacobian_squared).T - T.log(det_jacobian_int_squared).T + T.sum(T.batched_dot(jacobian_int, coeffs) ** 2, 1).T / self.intrinsic_variance).mean()
 
-        cost_total = (T.log(det_jacobian_squared) - T.log(det_jacobian_int_squared) + T.sum(
-            T.batched_dot(jacobian_int, coeffs) ** 2,
-            1) / self.intrinsic_variance + T.sum((T.batched_dot(jacobian, coeffs) - (inputs_step.T - inputs_base.T)) ** 2,
-                                                 1) / self.measurement_variance).mean()
+        #cost_total = (T.log(det_jacobian_squared) - T.log(det_jacobian_int_squared) + T.sum(
+        #    T.batched_dot(jacobian_int, coeffs) ** 2,
+        #    1) / self.intrinsic_variance + T.sum((T.batched_dot(jacobian, coeffs) - (inputs_step.T - inputs_base.T)) ** 2,
+        #                                         1) / self.measurement_variance).mean()
 
         # cost_rec = (T.sum((T.dot(jacobian, coeffs.T) - (inputs_step.T-inputs_base.T)) ** 2, 0)/self.measurement_variance).mean()
 
@@ -214,7 +212,7 @@ class non_local_tangent_net(object):
 
         # cost_total = (T.log(det_jacobian_squared)-T.sum(coeffs.T ** 2, 0)/self.intrinsic_variance+T.sum((T.dot(jacobian, coeffs.T) - (inputs_step.T-inputs_base.T)) ** 2, 0)/self.measurement_variance).mean()
 
-        return cost_total, cost_int, cost_total
+        return cost_rec, cost_int, cost_rec+cost_int
 
 
     def gradient_updates_momentum(self, cost, params, learning_rate, momentum):
@@ -367,7 +365,7 @@ class non_local_tangent_net(object):
             cost_term_valid.append(current_valid_cost.mean())
 
             if iteration % 25 == 0:
-                learning_rate.set_value(0.97 * learning_rate.get_value())
+                learning_rate.set_value(0.9 * learning_rate.get_value())
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
