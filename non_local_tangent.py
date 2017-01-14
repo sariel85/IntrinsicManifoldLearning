@@ -167,9 +167,9 @@ class non_local_tangent_net(object):
         det_jacobian_squared = T.abs_(jacobian_squared[:, 0, 0] * jacobian_squared[:, 1, 1] - jacobian_squared[:, 0, 1] * jacobian_squared[:, 1, 0])
         det_jacobian_int_squared = T.abs_(jacobian_int_squared[:, 0, 0] * jacobian_int_squared[:, 1, 1] - jacobian_int_squared[:, 0, 1] * jacobian_int_squared[:, 1, 0])
 
-        cost = (T.sum((T.dot(jacobian, coeffs.T) - (inputs_step.T-inputs_base.T)) ** 2, 0)/self.measurement_variance).mean()
+        cost = (T.sum((T.batched_dot(jacobian, coeffs) - (inputs_step-inputs_base)) ** 2, 1)/self.measurement_variance).mean()
 
-        cost_int = (T.log(det_jacobian_squared)-T.log(det_jacobian_int_squared)+2*T.sum(T.dot(jacobian_int, coeffs.T) ** 2, 0)/self.intrinsic_variance).mean()
+        cost_int = (T.log(det_jacobian_squared)-T.log(det_jacobian_int_squared)+2*T.sum(T.dot(jacobian_int, coeffs) ** 2, 1)/self.intrinsic_variance).mean()
 
         #cost = (-T.log(det_jacobian_squared)+T.log(det_jacobian_int_squared)+T.sum(T.dot(jacobian_int, coeffs.T) ** 2, 0)/self.intrinsic_variance+T.sum((T.dot(jacobian, coeffs.T) - (inputs_step.T-inputs_base.T)) ** 2, 0)/self.measurement_variance).mean()
         return cost, cost_int
