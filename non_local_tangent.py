@@ -265,8 +265,8 @@ class non_local_tangent_net(object):
         return updates
 
     def train_net(self, noisy_sensor_base, noisy_sensor_step):
-        max_iteration_tangent = 101
-        max_updates_int = 101
+        max_iteration_tangent = 201
+        max_updates_int = 201
         n_points = noisy_sensor_base.shape[1]
 
         n_valid_points = int(numpy.ceil(n_points*0.2))
