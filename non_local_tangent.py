@@ -148,13 +148,13 @@ class non_local_tangent_net(object):
     def get_jacobian(self, inputs_base):
         tengent_hidden_1 = self.get_tangent_hidden_1(inputs_base)
         tengent_hidden_2 = self.get_tangent_hidden_2(tengent_hidden_1)
-        jacobian = T.reshape(self.get_tangent_output(tengent_hidden_2).T, (self.dim_measurements, self.dim_intrinsic, inputs_base.shape[1])).dimshuffle((2, 0, 1))
+        jacobian = T.reshape(self.get_tangent_output(tengent_hidden_2).T, (inputs_base.shape[1], self.dim_measurements, self.dim_intrinsic))
         return jacobian
 
     def get_jacobian_int(self, inputs_base):
         int_hidden_1 = self.get_int_hidden_1(inputs_base)
         int_hidden_2 = self.get_int_hidden_2(int_hidden_1)
-        jacobian_int = T.reshape(self.get_int_output(int_hidden_2).T, (self.dim_intrinsic, self.dim_intrinsic, inputs_base.shape[1])).dimshuffle((2, 0, 1))
+        jacobian_int = T.reshape(self.get_int_output(int_hidden_2).T, (inputs_base.shape[1], self.dim_intrinsic, self.dim_intrinsic))
         return jacobian_int
 
     def get_cost(self, inputs_base, inputs_step, coeffs):
@@ -172,7 +172,7 @@ class non_local_tangent_net(object):
         cost_int = (T.log(det_jacobian_squared)-T.log(det_jacobian_int_squared)+T.sum(T.batched_dot(jacobian_int, coeffs) ** 2, 1)/self.intrinsic_variance).mean(axis=0)
 
         #cost = (-T.log(det_jacobian_squared)+T.log(det_jacobian_int_squared)+T.sum(T.dot(jacobian_int, coeffs.T) ** 2, 0)/self.intrinsic_variance+T.sum((T.dot(jacobian, coeffs.T) - (inputs_step.T-inputs_base.T)) ** 2, 0)/self.measurement_variance).mean()
-        return cost, cost_int
+        return cost+cost_int, cost_int
 
     #def get_cost(self, inputs_base, inputs_step, coeffs):
     #    jacobian = self.get_jacobian(inputs_base.T)
@@ -226,7 +226,7 @@ class non_local_tangent_net(object):
 
         b1 = momentum
         b2 = 0.01*momentum
-        e = 1e-8
+        e = 1e-14
         updates = []
         grads = T.grad(cost, params)
 
@@ -245,7 +245,7 @@ class non_local_tangent_net(object):
         #lr_t = learning_rate * (1/ fix1_fact)
         lr_t = learning_rate
         for p, g in zip(params, grads):
-            #g = T.clip(g, -1, 1)
+            g = T.clip(g, -1, 1)
             m = theano.shared(p.get_value() * 0.)
             v = theano.shared(p.get_value() * 0.)
             m_t = (b1 * g) + ((1. - b1) * m)
@@ -265,8 +265,8 @@ class non_local_tangent_net(object):
         return updates
 
     def train_net(self, noisy_sensor_base, noisy_sensor_step):
-        max_iteration_tangent = 201
-        max_updates_int = 201
+        max_iteration_tangent = 501
+        max_updates_int = 5001
         n_points = noisy_sensor_base.shape[1]
 
         n_valid_points = int(numpy.ceil(n_points*0.2))
@@ -293,10 +293,10 @@ class non_local_tangent_net(object):
                    self.W_int_3, self.b_int_1,
                    self.b_int_2, self.b_int_3]
 
-        learning_rate = theano.shared(5e-3)
-        momentum = theano.shared(1.)
+        learning_rate = theano.shared(1e-1)
+        momentum = theano.shared(0.1)
         cost, cost_int = self.get_cost(self.input_base_Theano, self.input_step_Theano, self.input_coeff_Theano)
-        updates = self.gradient_updates_momentum(cost, params, learning_rate, momentum)
+        updates = self.gradient_updates_momentum_int(cost, params, learning_rate, momentum)
 
         train = theano.function(inputs=[self.input_base_Theano, self.input_step_Theano, self.input_coeff_Theano], outputs=cost, updates=updates)
         train_valid = theano.function(inputs=[self.input_base_Theano, self.input_step_Theano, self.input_coeff_Theano], outputs=cost, updates=None)
@@ -306,15 +306,14 @@ class non_local_tangent_net(object):
         iteration = 0
 
         while iteration < max_iteration_tangent:
-            current_cost = numpy.zeros((n_points))
-            current_valid_cost = numpy.zeros((n_valid_points))
+
             for i_point in numpy.random.choice(n_points, size=(n_points), replace=False):
                 jacobian = self.get_jacobian_val(noisy_sensor_base[:, i_point].reshape((self.dim_measurements, 1)))[0, :, :]
                 jacobian_int = self.get_jacobian_int_val(noisy_sensor_base[:, i_point].reshape((self.dim_measurements, 1)))[0, :, :]
                 #coeffs[:, i_point] = numpy.dot(numpy.dot(numpy.linalg.pinv(numpy.dot(jacobian.T, jacobian) / self.measurement_variance), jacobian.T), noisy_sensor_step[:, i_point] - noisy_sensor_base[:, i_point]) / self.measurement_variance
                 #coeffs[:, i_point] = numpy.sqrt(self.intrinsic_variance)*coeffs[:, i_point]/numpy.linalg.norm(coeffs[:, i_point])
                 coeffs[:, i_point] = numpy.dot(numpy.dot(numpy.linalg.pinv(numpy.dot(jacobian.T, jacobian)/self.measurement_variance+numpy.dot(jacobian_int.T, jacobian_int)/self.intrinsic_variance), jacobian.T), noisy_sensor_step[:, i_point]-noisy_sensor_base[:, i_point])/self.measurement_variance
-                current_cost[i_point] = train(noisy_sensor_base[:, i_point].reshape((self.dim_measurements, 1)).T, noisy_sensor_step[:, i_point].reshape((self.dim_measurements, 1)).T, coeffs[:, i_point].reshape((self.dim_intrinsic, 1)).T)
+            current_cost = train(noisy_sensor_base[:, :].reshape((self.dim_measurements, n_points)).T, noisy_sensor_step[:, :].reshape((self.dim_measurements, n_points)).T, coeffs[:, :].reshape((self.dim_intrinsic, n_points)).T)
 
             for i_point in numpy.random.choice(n_valid_points, size=(n_valid_points), replace=False):
                 jacobian = self.get_jacobian_val(noisy_sensor_valid_base[:, i_point].reshape((self.dim_measurements, 1)))[0, :, :]
@@ -322,7 +321,7 @@ class non_local_tangent_net(object):
                 #coeffs_valid[:, i_point] = numpy.dot(numpy.dot(numpy.linalg.pinv(numpy.dot(jacobian.T, jacobian) / self.measurement_variance), jacobian.T), noisy_sensor_valid_step[:, i_point] - noisy_sensor_valid_base[:, i_point]) / self.measurement_variance
                 #coeffs_valid[:, i_point] = numpy.sqrt(self.intrinsic_variance)*coeffs_valid[:, i_point]/numpy.linalg.norm(coeffs_valid[:, i_point])
                 coeffs_valid[:, i_point] = numpy.dot(numpy.dot(numpy.linalg.pinv(numpy.dot(jacobian.T, jacobian)/self.measurement_variance+numpy.dot(jacobian_int.T, jacobian_int)/self.intrinsic_variance), jacobian.T), noisy_sensor_valid_step[:, i_point]-noisy_sensor_valid_base[:, i_point])/self.measurement_variance
-                current_valid_cost[i_point] = train_valid(noisy_sensor_valid_base[:, i_point].reshape((self.dim_measurements, 1)).T, noisy_sensor_valid_step[:, i_point].reshape((self.dim_measurements, 1)).T,coeffs_valid[:, i_point].reshape((self.dim_intrinsic, 1)).T)
+            current_valid_cost = train_valid(noisy_sensor_valid_base[:, :].reshape((self.dim_measurements, n_valid_points)).T, noisy_sensor_valid_step[:, :].reshape((self.dim_measurements, n_valid_points)).T, coeffs_valid[:, :].reshape((self.dim_intrinsic, n_valid_points)).T)
 
             iteration += 1
 
@@ -332,7 +331,7 @@ class non_local_tangent_net(object):
             cost_term_valid.append(current_valid_cost.mean())
 
             if iteration % 25 == 0:
-                learning_rate.set_value(0.95 * learning_rate.get_value())
+                learning_rate.set_value(0.90 * learning_rate.get_value())
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -343,8 +342,8 @@ class non_local_tangent_net(object):
         ax.set_title("Cost vs Epochs - Stage I")
 
 
-        learning_rate = theano.shared(1e-3)
-        momentum = theano.shared(1.)
+        learning_rate = theano.shared(5e-3)
+        momentum = theano.shared(0.1)
         cost, cost_int = self.get_cost(self.input_base_Theano, self.input_step_Theano, self.input_coeff_Theano)
         updates = self.gradient_updates_momentum_int(cost_int, params2, learning_rate, momentum)
 
@@ -357,18 +356,16 @@ class non_local_tangent_net(object):
         iteration = 0
 
         while iteration < max_updates_int:
-            current_cost = numpy.zeros((n_points))
-            current_valid_cost = numpy.zeros((n_valid_points))
-            for i_point in numpy.random.choice(n_points, size=(n_points), replace=False):
-                jacobian = self.get_jacobian_val(noisy_sensor_base[:, i_point].reshape((self.dim_measurements, 1)))[0, :, :]
-                jacobian_int = self.get_jacobian_int_val(noisy_sensor_base[:, i_point].reshape((self.dim_measurements, 1)))[0, :, :]
-                coeffs[:, i_point] = numpy.dot(numpy.dot(numpy.linalg.pinv(numpy.dot(jacobian.T, jacobian)/self.measurement_variance+numpy.dot(jacobian_int.T, jacobian_int)/self.intrinsic_variance), jacobian.T), noisy_sensor_step[:, i_point]-noisy_sensor_base[:, i_point])/self.measurement_variance
-                current_cost[i_point] = train(noisy_sensor_base[:, i_point].reshape((self.dim_measurements, 1)).T,  coeffs[:, i_point].reshape((self.dim_intrinsic, 1)).T)
-            for i_point in numpy.random.choice(n_valid_points, size=(n_valid_points), replace=False):
-                jacobian = self.get_jacobian_val(noisy_sensor_valid_base[:, i_point].reshape((self.dim_measurements, 1)))[0, :, :]
-                jacobian_int = self.get_jacobian_int_val(noisy_sensor_valid_base[:, i_point].reshape((self.dim_measurements, 1)))[0, :, :]
-                coeffs_valid[:, i_point] = numpy.dot(numpy.dot(numpy.linalg.pinv(numpy.dot(jacobian.T, jacobian)/self.measurement_variance+numpy.dot(jacobian_int.T, jacobian_int)/self.intrinsic_variance), jacobian.T), noisy_sensor_valid_step[:, i_point]-noisy_sensor_valid_base[:, i_point])/self.measurement_variance
-                current_valid_cost[i_point] = train_valid(noisy_sensor_valid_base[:, i_point].reshape((self.dim_measurements, 1)).T, coeffs_valid[:, i_point].reshape((self.dim_intrinsic, 1)).T)
+            #for i_point in numpy.random.choice(n_points, size=(n_points), replace=False):
+            #    jacobian = self.get_jacobian_val(noisy_sensor_base[:, i_point].reshape((self.dim_measurements, 1)))[0, :, :]
+            #    jacobian_int = self.get_jacobian_int_val(noisy_sensor_base[:, i_point].reshape((self.dim_measurements, 1)))[0, :, :]
+            #    #coeffs[:, i_point] = numpy.dot(numpy.dot(numpy.linalg.pinv(numpy.dot(jacobian.T, jacobian)/self.measurement_variance+numpy.dot(jacobian_int.T, jacobian_int)/self.intrinsic_variance), jacobian.T), noisy_sensor_step[:, i_point]-noisy_sensor_base[:, i_point])/self.measurement_variance
+            current_cost = train(noisy_sensor_base[:, :].reshape((self.dim_measurements, n_points)).T,  coeffs[:, :].reshape((self.dim_intrinsic, n_points)).T)
+            #for i_point in numpy.random.choice(n_valid_points, size=(n_valid_points), replace=False):
+                #jacobian = self.get_jacobian_val(noisy_sensor_valid_base[:, i_point].reshape((self.dim_measurements, 1)))[0, :, :]
+                #jacobian_int = self.get_jacobian_int_val(noisy_sensor_valid_base[:, i_point].reshape((self.dim_measurements, 1)))[0, :, :]
+                #coeffs_valid[:, i_point] = numpy.dot(numpy.dot(numpy.linalg.pinv(numpy.dot(jacobian.T, jacobian)/self.measurement_variance+numpy.dot(jacobian_int.T, jacobian_int)/self.intrinsic_variance), jacobian.T), noisy_sensor_valid_step[:, i_point]-noisy_sensor_valid_base[:, i_point])/self.measurement_variance
+            current_valid_cost = train_valid(noisy_sensor_valid_base[:, :].reshape((self.dim_measurements, n_valid_points)).T, coeffs_valid[:, :].reshape((self.dim_intrinsic, n_valid_points)).T)
 
             iteration += 1
 
@@ -378,12 +375,12 @@ class non_local_tangent_net(object):
             cost_term_valid_2.append(current_valid_cost.mean())
 
             if iteration % 25 == 0:
-                learning_rate.set_value(0.9*learning_rate.get_value())
+                learning_rate.set_value(0.99*learning_rate.get_value())
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.plot(cost_term_2[1:], c='b')
-        ax.plot(cost_term_valid_2[1:], c='r')
+        ax.plot(cost_term_2[5:], c='b')
+        ax.plot(cost_term_valid_2[5:], c='r')
         ax.set_xlabel('Epochs')
         ax.set_ylabel('Cost')
         ax.set_title("Cost vs Epochs - Stage II")

@@ -11,13 +11,13 @@ import numpy
 ###Settings#############################################################################################################
 sim_dir_name = "2D Unit Circle" #Which dataset to run
 
-n_points_used_for_dynamics = 800 #How many points are available from which to infer dynamics
+n_points_used_for_dynamics = 400 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 500
 n_points_used_for_clusters = 200 #How many cluster to use in Kernal method
 n_neighbors_cov = 20 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 10 #How many short distances are kept for each cluster point
-n_hidden_tangent = 16 #How many nodes in hidden layer that learns tangent plane
-n_hidden_int = 16 #How many nodes in hidden layer that learns intrinsic dynamics
+n_hidden_tangent = 10 #How many nodes in hidden layer that learns tangent plane
+n_hidden_int = 10 #How many nodes in hidden layer that learns intrinsic dynamics
 ########################################################################################################################
 
 sim_dir = './' + sim_dir_name
