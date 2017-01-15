@@ -244,7 +244,7 @@ class non_local_tangent_net(object):
         updates.append((fix1, fix1_T))
         updates.append((fix2, fix2_T))
         updates.append((i, i_t))
-
+k
         return updates
 
     def train_net(self, noisy_sensor_base, noisy_sensor_step):
