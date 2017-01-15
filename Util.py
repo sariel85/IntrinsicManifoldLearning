@@ -240,8 +240,8 @@ def get_metrics_from_net(non_local_tangent_net, noisy_sensor_clusters):
     metric_list_net_intrinsic = [None] * n_points
 
     for i_point in range(0, n_points):
-        jacobian = non_local_tangent_net.get_jacobian_val(noisy_sensor_clusters[:, i_point].reshape((dim_measurement, 1)))
-        jacobian_int = non_local_tangent_net.get_jacobian_int_val(noisy_sensor_clusters[:, i_point].reshape((dim_measurement, 1)))
+        jacobian = non_local_tangent_net.get_jacobian_val(noisy_sensor_clusters[:, i_point].reshape((dim_measurement, 1)))[0, :, :]
+        jacobian_int = non_local_tangent_net.get_jacobian_int_val(noisy_sensor_clusters[:, i_point].reshape((dim_measurement, 1)))[0, :, :]
         jacobian_total = numpy.dot(jacobian, numpy.linalg.pinv(jacobian_int))
         metric_list_net_tangent[i_point] = numpy.linalg.pinv(numpy.dot(jacobian, jacobian.T))
         metric_list_net_intrinsic[i_point] = numpy.linalg.pinv(numpy.dot(jacobian_total, jacobian_total.T))
