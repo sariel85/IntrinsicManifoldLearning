@@ -17,7 +17,7 @@ n_points_used_for_clusters = 200 #How many cluster to use in Kernal method
 n_neighbors_cov = 20 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 10 #How many short distances are kept for each cluster point
 n_hidden_tangent = 10 #How many nodes in hidden layer that learns tangent plane
-n_hidden_int = 10 #How many nodes in hidden layer that learns intrinsic dynamics
+n_hidden_int = 26 #How many nodes in hidden layer that learns intrinsic dynamics
 ########################################################################################################################
 
 sim_dir = './' + sim_dir_name
@@ -28,8 +28,8 @@ intrinsic_process_step = numpy.loadtxt(sim_dir + '/' + 'intrinsic_step.txt', del
 noisy_sensor_base = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy_base.txt', delimiter=',', dtype=dtype)
 noisy_sensor_step = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy_step.txt', delimiter=',', dtype=dtype)
 noisy_sensor_base_mean = noisy_sensor_base.mean()
-noisy_sensor_base = (noisy_sensor_base - noisy_sensor_base_mean)*1.5
-noisy_sensor_step = (noisy_sensor_step - noisy_sensor_base_mean)*1.5
+noisy_sensor_base = (noisy_sensor_base - noisy_sensor_base_mean)
+noisy_sensor_step = (noisy_sensor_step - noisy_sensor_base_mean)
 intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=dtype)
 measurement_variance = numpy.load(sim_dir + '/' + 'measurement_variance.npy').astype(dtype=dtype)
 

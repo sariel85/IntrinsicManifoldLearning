@@ -102,9 +102,21 @@ class non_local_tangent_net(object):
 
         self.b_int_2 = theano.shared(value=numpy.zeros((self.n_hidden_int,), dtype=theano.config.floatX), name='b_int_2', borrow=True)
 
-        #self.b_int_3 = theano.shared(value=numpy.asarray([1.0, 0., 0., 1.], dtype=theano.config.floatX), name='b_int_3', borrow=True)
-
         self.b_int_3 = theano.shared(value=numpy.zeros((self.dim_jacobian_int,), dtype=theano.config.floatX), name='b_int_3', borrow=True)
+
+
+        self.W_drift_1 = theano.shared(value=initial_W_drift_1, name='W_drift_1', borrow=True)
+
+        self.W_drift_2 = theano.shared(value=initial_W_drift_2, name='W_drift_2', borrow=True)
+
+        self.W_drift_3 = theano.shared(value=initial_W_drift_3, name='W_drift_3', borrow=True)
+
+        self.b_drift_1 = theano.shared(value=numpy.zeros((self.n_hidden_int,), dtype=theano.config.floatX), name='b_int_1', borrow=True)
+
+        self.b_drift_2 = theano.shared(value=numpy.zeros((self.n_hidden_int,), dtype=theano.config.floatX), name='b_int_2', borrow=True)
+
+        self.b_drift_2 = theano.shared(value=numpy.zeros((self.n_hidden_int,), dtype=theano.config.floatX), name='b_int_2', borrow=True)
+
 
 
         self.get_jacobian_val = theano.function(
