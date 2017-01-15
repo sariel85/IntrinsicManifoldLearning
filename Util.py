@@ -248,6 +248,10 @@ def get_metrics_from_net(non_local_tangent_net, noisy_sensor_clusters):
 
     return metric_list_net_tangent, metric_list_net_intrinsic
 
+def get_drift_from_net(non_local_tangent_net, noisy_sensor_clusters):
+        drift = non_local_tangent_net.get_drift_val(noisy_sensor_clusters)
+        return drift
+
 def trim_distances(dist_mat, dist_mat_criteria=None, n_neighbors=10):
 
     n_points = dist_mat.shape[0]
@@ -305,6 +309,18 @@ def print_metrics(noisy_sensor_clusters, metric_list, intrinsic_dim, titleStr, s
                       noisy_sensor_clusters[2, i_point], u[0, 1], u[1, 1], u[2, 1],
                       length=numpy.linalg.norm(u[:, 1]), pivot='tail')
     ax.set_title(titleStr)
+
+def print_drift(noisy_sensor_clusters, drift, titleStr):
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+
+    n_points = noisy_sensor_clusters.shape[1]
+    for i_point in range(0, n_points):
+        ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
+                  noisy_sensor_clusters[2, i_point], drift[i_point, 0], drift[i_point, 1], drift[i_point, 2], length=numpy.linalg.norm(drift[i_point, :]), pivot='tail')
+    ax.set_title(titleStr)
+
 
 
 

@@ -11,13 +11,14 @@ import numpy
 ###Settings#############################################################################################################
 sim_dir_name = "2D Unit Circle" #Which dataset to run
 
-n_points_used_for_dynamics = 400 #How many points are available from which to infer dynamics
+n_points_used_for_dynamics = 1000 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 500
 n_points_used_for_clusters = 200 #How many cluster to use in Kernal method
 n_neighbors_cov = 20 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 10 #How many short distances are kept for each cluster point
-n_hidden_tangent = 30 #How many nodes in hidden layer that learns tangent plane
-n_hidden_int = 30 #How many nodes in hidden layer that learns intrinsic dynamics
+n_hidden_drift = 4 #How many nodes in hidden layer that learns intrinsic dynamics
+n_hidden_tangent = 20 #How many nodes in hidden layer that learns tangent plane
+n_hidden_int = 20 #How many nodes in hidden layer that learns intrinsic dynamics
 ########################################################################################################################
 
 sim_dir = './' + sim_dir_name
@@ -73,7 +74,7 @@ print_dynamics(noisy_sensor_base, noisy_sensor_step, indexs=points_dynamics_plot
 
 
 ###Intrinsic Metric Learning Net########################################################################################
-non_local_tangent_net_instance = non_local_tangent_net(intrinsic_process_base, dim_measurements=dim_measurement, dim_intrinsic=dim_intrinsic, n_hidden_tangent=n_hidden_tangent,  n_hidden_int=n_hidden_int, intrinsic_variance=intrinsic_variance, measurement_variance=measurement_variance)
+non_local_tangent_net_instance = non_local_tangent_net(intrinsic_process_base, dim_measurements=dim_measurement, dim_intrinsic=dim_intrinsic, n_hidden_drift=n_hidden_drift, n_hidden_tangent=n_hidden_tangent,  n_hidden_int=n_hidden_int, intrinsic_variance=intrinsic_variance, measurement_variance=measurement_variance)
 non_local_tangent_net_instance.train_net(noisy_sensor_base, noisy_sensor_step)
 ########################################################################################################################
 
@@ -94,6 +95,10 @@ n_points_used_for_clusters = intrinsic_process_clusters.shape[1]
 color_map_clusters = color_map[n_points_used_for_clusters_indexs, :]
 
 metric_list_net_tangent, metric_list_net_intrinsic = get_metrics_from_net(non_local_tangent_net_instance, noisy_sensor_clusters)
+
+net_drift = get_drift_from_net(non_local_tangent_net_instance, noisy_sensor_clusters)
+
+print_drift(noisy_sensor_clusters, net_drift, titleStr="Net Learned Drift")
 
 print_metrics(noisy_sensor_clusters, metric_list_net_tangent, intrinsic_dim=dim_intrinsic, titleStr="Net Learned Tangent Space", scale=intrinsic_variance, space_mode=True)
 
