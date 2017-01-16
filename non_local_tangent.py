@@ -478,7 +478,7 @@ class non_local_tangent_net(object):
             cost_term_valid_2.append(current_valid_cost.mean())
 
             if iteration % 25 == 0:
-                learning_rate.set_value(0.99*learning_rate.get_value())
+                learning_rate.set_value(0.990*learning_rate.get_value())
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
