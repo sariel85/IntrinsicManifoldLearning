@@ -438,7 +438,7 @@ class non_local_tangent_net(object):
         ax.plot(cost_term_valid[1:], c='r')
         ax.set_xlabel('Epochs')
         ax.set_ylabel('Cost')
-        ax.set_title("Cost vs Epochs - Stage I")
+        ax.set_title("Cost vs Epochs - Tangent Space Stage")
 
 
         learning_rate = theano.shared(1e-2)
@@ -486,4 +486,4 @@ class non_local_tangent_net(object):
         ax.plot(cost_term_valid_2[5:], c='r')
         ax.set_xlabel('Epochs')
         ax.set_ylabel('Cost')
-        ax.set_title("Cost vs Epochs - Stage II")
+        ax.set_title("Cost vs Epochs - Stage Intrinsic")
