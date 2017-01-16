@@ -11,7 +11,7 @@ import numpy
 ###Settings#############################################################################################################
 sim_dir_name = "2D Unit Circle" #Which dataset to run
 
-n_points_used_for_dynamics = 1000 #How many points are available from which to infer dynamics
+n_points_used_for_dynamics = 500 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 500
 n_points_used_for_clusters = 200 #How many cluster to use in Kernal method
 n_neighbors_cov = 20 #How neighboors to use from which to infer dynamics locally
