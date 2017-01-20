@@ -321,6 +321,48 @@ def print_drift(noisy_sensor_clusters, drift, titleStr):
                   noisy_sensor_clusters[2, i_point], drift[i_point, 0], drift[i_point, 1], drift[i_point, 2], length=numpy.linalg.norm(drift[i_point, :]), pivot='tail')
     ax.set_title(titleStr)
 
+def trim_non_euc(dist_mat, dim_intrinsic):
+    dist_mat_trimmed = numpy.zeros(dist_mat.shape)
+    dist_mat_trimmed_wgt = numpy.zeros(dist_mat.shape)
+    n_points = dist_mat.shape[0]
+    n_balls = 40
+    indexs_balls = numpy.random.choice(n_points, size=n_balls, replace=False)
+
+    for i_ball in indexs_balls:
+        knn_indexes = numpy.argsort(dist_mat[i_ball], kind='quicksort')
+        n_neighbors = 4
+        flat = True
+        while flat:
+            knn_indexes_sub = knn_indexes[0:n_neighbors]
+            A = dist_mat[knn_indexes_sub,:][:,knn_indexes_sub]
+            # square it
+            A = A ** 2
+
+            # centering matrix
+            n = A.shape[0]
+            J_c = 1. / n * (numpy.eye(n) - 1 + (n - 1) * numpy.eye(n))
+
+            # perform double centering
+            B = -0.5 * (J_c.dot(A)).dot(J_c)
+
+            # find eigenvalues and eigenvectors
+            eigen_val = -numpy.sort(-numpy.abs(numpy.linalg.eig(B)[0]))
+            expl = numpy.sum(eigen_val[:dim_intrinsic])
+            res = numpy.sum(eigen_val[dim_intrinsic:])
+            check = (res/(res+expl))
+            flat = (check<0.1)
+            if n_neighbors==n_points:
+                flat = False
+            else:
+                n_neighbors = min(n_neighbors + 1, n_points)
+
+        for i_row in knn_indexes_sub:
+            for i_col in knn_indexes_sub:
+                dist_mat_trimmed[i_row, i_col] = dist_mat[i_row, i_col]
+                dist_mat_trimmed_wgt[i_row, i_col] = 1
+
+    return dist_mat_trimmed, dist_mat_trimmed_wgt
+
 
 
 

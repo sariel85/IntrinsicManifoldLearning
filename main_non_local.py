@@ -9,11 +9,11 @@ from sklearn import manifold
 import numpy
 
 ###Settings#############################################################################################################
-sim_dir_name = "2D Unit Circle" #Which dataset to run
+sim_dir_name = "Non Convex" #Which dataset to run
 
 n_points_used_for_dynamics = 500 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 500
-n_points_used_for_clusters = 200 #How many cluster to use in Kernal method
+n_points_used_for_clusters = 150 #How many cluster to use in Kernal method
 n_neighbors_cov = 20 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 10 #How many short distances are kept for each cluster point
 n_hidden_drift = 4 #How many nodes in hidden layer that learns intrinsic dynamics
@@ -98,6 +98,8 @@ metric_list_net_tangent, metric_list_net_intrinsic = get_metrics_from_net(non_lo
 
 net_drift = get_drift_from_net(non_local_tangent_net_instance, noisy_sensor_clusters)
 
+
+
 print_drift(noisy_sensor_clusters, net_drift, titleStr="Net Learned Drift")
 
 print_metrics(noisy_sensor_clusters, metric_list_net_tangent, intrinsic_dim=dim_intrinsic, titleStr="Net Learned Tangent Space", scale=intrinsic_variance, space_mode=True)
@@ -130,12 +132,28 @@ dist_mat_local = scipy.sparse.csgraph.shortest_path(dist_mat_local, directed=Fal
 dist_mat_true_sp = scipy.sparse.csgraph.shortest_path(dist_mat_true_sp, directed=False)
 dist_mat_measured_sp = scipy.sparse.csgraph.shortest_path(dist_mat_measured_sp, directed=False)
 
+#dist_mat_true_sp_wgt = numpy.ones((n_points_used_for_clusters,n_points_used_for_clusters))
+dist_mat_true_sp, dist_mat_true_sp_wgt = trim_non_euc(dist_mat_true_sp, dim_intrinsic)
+'''
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+ax.scatter(noisy_sensor_clusters[0, :], noisy_sensor_clusters[1, :],noisy_sensor_clusters[2, :], c=color_map)
+plt.show(block=False)
+for i_point in range(n_points_used_for_clusters):
+    for j_point in range(n_points_used_for_clusters):
+        if dist_mat_true_sp[i_point, j_point] != 0 :
+            u = noisy_sensor_clusters[:, j_point] - noisy_sensor_clusters[:, i_point]
+            ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point], noisy_sensor_clusters[2, i_point], u[0], u[1], u[2], length=numpy.linalg.norm(u), pivot='tail')
+'''
+
 mds = manifold.MDS(n_components=dim_intrinsic, max_iter=20000, eps=1e-9, dissimilarity="precomputed", n_jobs=1)
 
-iso_embedding_intrinsic = mds.fit(dist_mat_net_intrinsic).embedding_
-iso_embedding_tangent = mds.fit(dist_mat_net_tangent).embedding_
-iso_embedding_local = mds.fit(dist_mat_local).embedding_
-iso_embedding_true_sp = mds.fit(dist_mat_true_sp).embedding_
+iso_embedding_intrinsic = mds.fit(dist_mat_net_intrinsic, weight=None).embedding_
+iso_embedding_tangent = mds.fit(dist_mat_net_tangent, weight=None).embedding_
+iso_embedding_local = mds.fit(dist_mat_local, weight=None).embedding_
+iso_embedding_true_sp = mds.fit(dist_mat_true_sp, weight=dist_mat_true_sp_wgt).embedding_
+#iso_embedding_true_sp = mds.fit(dist_mat_true_sp).embedding_
+
 iso_embedding_measured_sp = mds.fit(dist_mat_measured_sp).embedding_
 iso_embedding_true = mds.fit(dist_mat_true).embedding_
 iso_embedding_measured = mds.fit(dist_mat_measured).embedding_
@@ -144,10 +162,10 @@ iso_embedding_measured = mds.fit(dist_mat_measured).embedding_
 diff_embedding_tangent = calc_diff_map(dist_mat_net_tangent, dims=2, factor=2)
 diff_embedding_intrinsic = calc_diff_map(dist_mat_net_intrinsic, dims=2, factor=2)
 diff_embedding_local = calc_diff_map(dist_mat_local, dims=2, factor=2)
-diff_embedding_true_sp = calc_diff_map(dist_mat_true_sp, dims=2, factor=2)
-diff_embedding_measured_sp = calc_diff_map(dist_mat_true_sp, dims=2, factor=2)
+#diff_embedding_true_sp = calc_diff_map(dist_mat_true_sp, dims=2, factor=2)
+diff_embedding_measured_sp = calc_diff_map(dist_mat_measured_sp, dims=2, factor=2)
 diff_embedding_true = calc_diff_map(dist_mat_local, dims=2, factor=2)
-diff_embedding_measured = calc_diff_map(dist_mat_true_sp, dims=2, factor=2)
+diff_embedding_measured = calc_diff_map(dist_mat_measured, dims=2, factor=2)
 
 
 ###Isomaps##############################################################################################################
@@ -193,9 +211,9 @@ print_process(diff_embedding_local.T, bounding_shape=None, color_map=color_map_c
 stress, stress_normlized = embbeding_score(intrinsic_process_clusters, diff_embedding_local.T, titleStr="Diffusion Maps with Locally Learned Intrinsic Metric", n_points=n_points_used_for_clusters)
 print('diff_embedding_local:', stress_normlized)
 
-print_process(diff_embedding_true_sp.T, bounding_shape=None, color_map=color_map_clusters, titleStr="Diffusion Maps with Exact Short Distances", align_points=intrinsic_process_clusters)
-stress, stress_normlized = embbeding_score(intrinsic_process_clusters, diff_embedding_true_sp.T, titleStr="Diffusion Maps with Exact Short Distances", n_points=n_points_used_for_clusters)
-print('diff_embedding_true_sp:', stress_normlized)
+#print_process(diff_embedding_true_sp.T, bounding_shape=None, color_map=color_map_clusters, titleStr="Diffusion Maps with Exact Short Distances", align_points=intrinsic_process_clusters)
+#stress, stress_normlized = embbeding_score(intrinsic_process_clusters, diff_embedding_true_sp.T, titleStr="Diffusion Maps with Exact Short Distances", n_points=n_points_used_for_clusters)
+#print('diff_embedding_true_sp:', stress_normlized)
 
 print_process(diff_embedding_true.T, bounding_shape=None, color_map=color_map_clusters, titleStr="Diffusion Maps on Intrinsic Space", align_points=intrinsic_process_clusters)
 stress, stress_normlized = embbeding_score(intrinsic_process_clusters, diff_embedding_true.T, titleStr="Diffusion Maps on Intrinsic Space", n_points=n_points_used_for_clusters)
