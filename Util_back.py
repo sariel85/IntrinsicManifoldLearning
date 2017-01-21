@@ -328,8 +328,8 @@ def trim_non_euc(dist_mat, dim_intrinsic):
     n_balls = 40
     #indexs_balls = numpy.random.choice(n_points, size=n_points, replace=False)
     is_bound = numpy.zeros(dist_mat.shape[0])
-    for i_point in range(dist_mat.shape[0]):
-        knn_indexes = numpy.argsort(dist_mat[i_point], kind='quicksort')
+    for i_ball in range(dist_mat.shape[0]):
+        knn_indexes = numpy.argsort(dist_mat[i_ball], kind='quicksort')
         n_neighbors = dim_intrinsic + 1
         flat = True
         while flat:
@@ -349,7 +349,7 @@ def trim_non_euc(dist_mat, dim_intrinsic):
             eigen_val, eigen_vect = numpy.linalg.eig(B)
             eigen_vect = eigen_vect.T
             eigen_val_sort_ind = numpy.argsort(-numpy.abs(eigen_val))
-            eigen_val = numpy.abs(eigen_val[eigen_val_sort_ind])
+            eigen_val = eigen_val[eigen_val_sort_ind]
             eigen_vect = eigen_vect[eigen_val_sort_ind].T
 
             expl = numpy.sum(eigen_val[:dim_intrinsic])
@@ -361,12 +361,24 @@ def trim_non_euc(dist_mat, dim_intrinsic):
             else:
                 n_neighbors = min(n_neighbors + 3, n_points)
 
-        for i_row in knn_indexes_sub:
-            for i_col in knn_indexes_sub:
+        local_chart =  numpy.dot(eigen_vect[:, 0:dim_intrinsic], (numpy.diag(numpy.sqrt(eigen_val[0:dim_intrinsic]))))
+
+        diff = dim_intrinsic*((local_chart[0,:]- local_chart[1:, :].mean())**2).mean()
+        cov = numpy.cov(local_chart[1:, :].T).trace()
+
+        if (diff/cov)>0.5:
+            is_bound[i_ball] = 1
+
+    dist_mat_2_bound=dist_mat[:, numpy.where(is_bound.T==1)]
+    dist_vect_2_bound = dist_mat_2_bound.min(axis=(1,2))
+
+    for i_row in range(dist_mat.shape[0]):
+        for i_col in range(dist_mat.shape[0]):
+            if (dist_vect_2_bound[i_row] + dist_vect_2_bound[i_col] > dist_mat[i_row, i_col]):
                 dist_mat_trimmed[i_row, i_col] = dist_mat[i_row, i_col]
                 dist_mat_trimmed_wgt[i_row, i_col] = 1
 
-    return dist_mat_trimmed, dist_mat_trimmed_wgt
+    return dist_mat_trimmed, dist_mat_trimmed_wgt, is_bound
 
 
 
