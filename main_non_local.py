@@ -133,7 +133,7 @@ dist_mat_true_sp = scipy.sparse.csgraph.shortest_path(dist_mat_true_sp, directed
 dist_mat_measured_sp = scipy.sparse.csgraph.shortest_path(dist_mat_measured_sp, directed=False)
 
 dist_mat_net_tangent_temp = dist_mat_net_tangent
-dist_mat_net_tangent, dist_mat_net_tangent_wgt = trim_non_euc(dist_mat_net_tangent, dim_intrinsic)
+dist_mat_net_tangent, dist_mat_net_tangent_wgt = trim_non_euc(dist_mat_net_tangent, dim_intrinsic, intrinsic_process_clusters)
 
 dist_mat_net_intrinsic_temp = dist_mat_net_intrinsic
 dist_mat_net_intrinsic, dist_mat_net_intrinsic_wgt = trim_non_euc(dist_mat_net_intrinsic, dim_intrinsic)

@@ -321,7 +321,8 @@ def print_drift(noisy_sensor_clusters, drift, titleStr):
                   noisy_sensor_clusters[2, i_point], drift[i_point, 0], drift[i_point, 1], drift[i_point, 2], length=numpy.linalg.norm(drift[i_point, :]), pivot='tail')
     ax.set_title(titleStr)
 
-def trim_non_euc(dist_mat, dim_intrinsic):
+def trim_non_euc(dist_mat, dim_intrinsic, intrinsic_process_clusters):
+
     dist_mat_trimmed = numpy.zeros(dist_mat.shape)
     dist_mat_trimmed_wgt = numpy.zeros(dist_mat.shape)
     n_points = dist_mat.shape[0]
@@ -334,6 +335,7 @@ def trim_non_euc(dist_mat, dim_intrinsic):
         flat = True
         while flat:
             knn_indexes_sub = knn_indexes[0:n_neighbors]
+
             A = dist_mat[knn_indexes_sub,:][:,knn_indexes_sub]
             # square it
             A = A ** 2
@@ -355,12 +357,21 @@ def trim_non_euc(dist_mat, dim_intrinsic):
             expl = numpy.sum(eigen_val[:dim_intrinsic])
             res = numpy.sum(eigen_val[dim_intrinsic:])
             check = (res/(res+expl))
-            flat = (check<0.01)
+            flat = (check<0.2)
             if n_neighbors == n_points:
                 flat = False
             else:
                 n_neighbors = min(n_neighbors + 3, n_points)
 
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.scatter(intrinsic_process_clusters[0, :], intrinsic_process_clusters[1, :], c="k")
+        for i_point in knn_indexes_sub:
+            ax.scatter(intrinsic_process_clusters[0, i_point], intrinsic_process_clusters[1, i_point], c='r')
+        ax.scatter(intrinsic_process_clusters[0, knn_indexes_sub[0]], intrinsic_process_clusters[1, knn_indexes_sub[0]], c='g')
+
+        plt.show(block=False)
+        print(i_point)
         for i_row in knn_indexes_sub:
             for i_col in knn_indexes_sub:
                 dist_mat_trimmed[i_row, i_col] = dist_mat[i_row, i_col]
