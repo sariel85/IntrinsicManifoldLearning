@@ -360,7 +360,7 @@ def trim_non_euc(dist_mat, dim_intrinsic, intrinsic_process_clusters):
             flat = (check<0.2)
             if n_neighbors == n_points:
                 flat = False
-            else:
+            else:c
                 n_neighbors = min(n_neighbors + 3, n_points)
 
         fig = plt.figure()
