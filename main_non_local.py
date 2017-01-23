@@ -149,6 +149,7 @@ for i_point in range(n_points_used_for_clusters):
             ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point], noisy_sensor_clusters[2, i_point], u[0], u[1], u[2], length=numpy.linalg.norm(u), pivot='tail')
 '''
 
+'''
 fig = plt.figure()
 ax = fig.gca()
 ax.scatter(intrinsic_process_clusters[0, :], intrinsic_process_clusters[1, :], c="k")
@@ -159,6 +160,7 @@ for i_point in range(n_points_used_for_clusters):
             u = intrinsic_process_clusters[:, j_point] - intrinsic_process_clusters[:, i_point]
             ax.quiver(intrinsic_process_clusters[0, i_point], intrinsic_process_clusters[1, i_point], u[0], u[1], angles='xy', scale_units='xy', scale=1, pivot='tail', width=0.0005)
 
+'''
 mds = manifold.MDS(n_components=2, max_iter=3000, eps=1e-5, dissimilarity="precomputed", n_jobs=1, n_init=1)
 
 #iso_embedding_intrinsic = mds.fit(dist_mat_net_intrinsic_temp, weight=dist_mat_net_intrinsic_wgt).embedding_
