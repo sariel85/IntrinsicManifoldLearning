@@ -333,6 +333,7 @@ def trim_non_euc(dist_mat, dim_intrinsic, intrinsic_process_clusters):
         knn_indexes = numpy.argsort(dist_mat[i_point], kind='quicksort')
         n_neighbors = dim_intrinsic + 1
         flat = True
+        check_list = []
         while flat:
             knn_indexes_sub = knn_indexes[0:n_neighbors]
 
@@ -357,10 +358,11 @@ def trim_non_euc(dist_mat, dim_intrinsic, intrinsic_process_clusters):
             expl = numpy.sum(eigen_val[:dim_intrinsic])
             res = numpy.sum(eigen_val[dim_intrinsic:])
             check = (res/(res+expl))
+            check_list.append(check)
             flat = (check<0.2)
             if n_neighbors == n_points:
                 flat = False
-            else:c
+            else:
                 n_neighbors = min(n_neighbors + 3, n_points)
 
         fig = plt.figure()
