@@ -413,13 +413,13 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
         ax.scatter(flat_local[0, 0], flat_local[1, 0], c="g")
         ax.scatter(flat_local[0, 1:], flat_local[1, 1:], c="r")
         plt.axis('equal')
-        plt.show()
+        plt.show(block=False)
 
 
         print(i_point)
         for i_row in knn_indexes_sub:
             for i_col in knn_indexes_sub:
-                dist_mat_trimmed[i_row, i_col] = +dist_mat_trimmed[i_row, i_col] + dist_mat_trust_temp[i_row, i_col]
+                dist_mat_trimmed[i_row, i_col] = dist_mat_trimmed[i_row, i_col] + dist_mat_trust_temp[i_row, i_col]
                 dist_mat_trimmed_wgt[i_row, i_col] = dist_mat_trimmed_wgt[i_row, i_col] + 1
 
     dist_mat_trimmed = dist_mat_trimmed/numpy.maximum(dist_mat_trimmed_wgt, numpy.ones(dist_mat_trimmed_wgt.shape))
