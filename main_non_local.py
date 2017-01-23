@@ -165,7 +165,7 @@ mds = manifold.MDS(n_components=2, max_iter=3000, eps=1e-5, dissimilarity="preco
 
 #iso_embedding_intrinsic = mds.fit(dist_mat_net_intrinsic_temp, weight=dist_mat_net_intrinsic_wgt).embedding_
 #iso_embedding_tangent = mds.fit(dist_mat_net_tangent_temp, weight=dist_mat_net_tangent_wgt).embedding_
-iso_embedding_local = mds.fit(dist_mat_local, weight=dist_mat_local_wgt).embedding_
+iso_embedding_local = mds.fit(dist_mat_local).embedding_
 #iso_embedding_true_sp = mds.fit(dist_mat_true_sp_temp, weight=dist_mat_true_sp_wgt).embedding_
 #iso_embedding_true_sp = mds.fit(dist_mat_true_sp).embedding_
 
