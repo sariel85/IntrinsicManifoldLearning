@@ -330,7 +330,7 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
     dist_mat_trimmed_wgt = numpy.zeros((n_points, n_points))
     #indexs_balls = numpy.random.choice(n_points, size=n_points, replace=False)
 
-    for i_point in range(10):
+    for i_point in range(2):
         dist_mat_trust_temp = numpy.array(dist_mat_trust, copy=True)
 
         knn_indexes = numpy.argsort(dist_mat_fill[i_point], kind='quicksort')
@@ -419,7 +419,7 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
         print(i_point)
         for i_row in knn_indexes_sub:
             for i_col in knn_indexes_sub:
-                dist_mat_trimmed[i_row, i_col] = dist_mat_trust_temp[i_row, i_col]
+                dist_mat_trimmed[i_row, i_col] = +dist_mat_trimmed[i_row, i_col] + dist_mat_trust_temp[i_row, i_col]
                 dist_mat_trimmed_wgt[i_row, i_col] = dist_mat_trimmed_wgt[i_row, i_col] + 1
 
     dist_mat_trimmed = dist_mat_trimmed/numpy.maximum(dist_mat_trimmed_wgt, numpy.ones(dist_mat_trimmed_wgt.shape))
