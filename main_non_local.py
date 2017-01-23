@@ -10,7 +10,7 @@ import numpy
 ###Settings#############################################################################################################
 sim_dir_name = "Non Convex" #Which dataset to run
 
-n_points_used_for_dynamics = 500 #How many points are available from which to infer dynamics
+n_points_used_for_dynamics = 2000 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 500
 n_points_used_for_clusters = 300 #How many cluster to use in Kernal method
 n_neighbors_cov = 30 #How neighboors to use from which to infer dynamics locally
@@ -134,8 +134,8 @@ dist_mat_local_geo = scipy.sparse.csgraph.shortest_path(dist_mat_local, directed
 dist_mat_true_sp_geo = scipy.sparse.csgraph.shortest_path(dist_mat_true_sp, directed=False)
 dist_mat_measured_sp_geo = scipy.sparse.csgraph.shortest_path(dist_mat_measured_sp, directed=False)
 
-dist_mat_true_sp_temp = dist_mat_true_sp
-dist_mat_true_sp, dist_mat_true_sp_wgt = trim_non_euc(dist_mat_true_sp, dist_mat_net_tangent_geo,  dim_intrinsic, intrinsic_process_clusters)
+dist_mat_local_temp = dist_mat_local
+dist_mat_local, dist_mat_local_wgt = trim_non_euc(dist_mat_local, dist_mat_local_geo,  dim_intrinsic, intrinsic_process_clusters)
 
 '''
 fig = plt.figure()
@@ -155,7 +155,7 @@ ax.scatter(intrinsic_process_clusters[0, :], intrinsic_process_clusters[1, :], c
 plt.show(block=False)
 for i_point in range(n_points_used_for_clusters):
     for j_point in range(n_points_used_for_clusters):
-        if dist_mat_true_sp_wgt[i_point, j_point] != 0 :
+        if dist_mat_local_wgt[i_point, j_point] != 0 :
             u = intrinsic_process_clusters[:, j_point] - intrinsic_process_clusters[:, i_point]
             ax.quiver(intrinsic_process_clusters[0, i_point], intrinsic_process_clusters[1, i_point], u[0], u[1], angles='xy', scale_units='xy', scale=1, pivot='tail', width=0.0005)
 
@@ -163,8 +163,8 @@ mds = manifold.MDS(n_components=2, max_iter=3000, eps=1e-5, dissimilarity="preco
 
 #iso_embedding_intrinsic = mds.fit(dist_mat_net_intrinsic_temp, weight=dist_mat_net_intrinsic_wgt).embedding_
 #iso_embedding_tangent = mds.fit(dist_mat_net_tangent_temp, weight=dist_mat_net_tangent_wgt).embedding_
-#iso_embedding_local = mds.fit(dist_mat_local_temp, weight=dist_mat_local_wgt).embedding_
-iso_embedding_true_sp = mds.fit(dist_mat_true_sp_temp, weight=dist_mat_true_sp_wgt).embedding_
+iso_embedding_local = mds.fit(dist_mat_local, weight=dist_mat_local_wgt).embedding_
+#iso_embedding_true_sp = mds.fit(dist_mat_true_sp_temp, weight=dist_mat_true_sp_wgt).embedding_
 #iso_embedding_true_sp = mds.fit(dist_mat_true_sp).embedding_
 
 #iso_embedding_measured_sp = mds.fit(dist_mat_measured_sp).embedding_
@@ -190,13 +190,13 @@ iso_embedding_true_sp = mds.fit(dist_mat_true_sp_temp, weight=dist_mat_true_sp_w
 #stress, stress_normlized = embbeding_score(intrinsic_process_clusters, iso_embedding_tangent.T, titleStr="Isomap with Net-Learned Tangent Metric", n_points=n_points_used_for_clusters)
 #print('iso_embedding_tangent:', stress_normlized)
 
-#print_process(iso_embedding_local.T, bounding_shape=None, color_map=color_map_clusters, titleStr="Isomap with Locally Learned Intrinsic Metric")
-#stress, stress_normlized = embbeding_score(intrinsic_process_clusters, iso_embedding_local.T, titleStr="Isomap with Locally Learned Intrinsic Metric", n_points=n_points_used_for_clusters)
-#print('iso_embedding_local:', stress_normlized)
+print_process(iso_embedding_local.T, bounding_shape=None, color_map=color_map_clusters, titleStr="Isomap with Locally Learned Intrinsic Metric")
+stress, stress_normlized = embbeding_score(intrinsic_process_clusters, iso_embedding_local.T, titleStr="Isomap with Locally Learned Intrinsic Metric", n_points=n_points_used_for_clusters)
+print('iso_embedding_local:', stress_normlized)
 
-print_process(iso_embedding_true_sp.T, bounding_shape=None, color_map=color_map_clusters, titleStr="Isomap with Exact Short Distances")
-stress, stress_normlized = embbeding_score(intrinsic_process_clusters, iso_embedding_true_sp.T, titleStr="Isomap with Exact Short Distances", n_points=n_points_used_for_clusters)
-print('iso_embedding_true_sp:', stress_normlized)
+#print_process(iso_embedding_true_sp.T, bounding_shape=None, color_map=color_map_clusters, titleStr="Isomap with Exact Short Distances")
+#stress, stress_normlized = embbeding_score(intrinsic_process_clusters, iso_embedding_true_sp.T, titleStr="Isomap with Exact Short Distances", n_points=n_points_used_for_clusters)
+#print('iso_embedding_true_sp:', stress_normlized)
 
 #print_process(iso_embedding_measured_sp.T, bounding_shape=None, color_map=color_map_clusters, titleStr="Regular Isomap")
 #stress, stress_normlized = embbeding_score(intrinsic_process_clusters, iso_embedding_measured_sp.T, titleStr="Regular Isomap", n_points=n_points_used_for_clusters)

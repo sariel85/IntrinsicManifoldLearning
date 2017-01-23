@@ -330,7 +330,7 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
     dist_mat_trimmed_wgt = numpy.zeros((n_points, n_points))
     #indexs_balls = numpy.random.choice(n_points, size=n_points, replace=False)
 
-    for i_point in range(20):
+    for i_point in range(1):
         dist_mat_trust_temp = numpy.array(dist_mat_trust, copy=True)
 
         knn_indexes = numpy.argsort(dist_mat_fill[i_point], kind='quicksort')
@@ -370,7 +370,7 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
 
             wgt = (D_sub_trust_original != 0).astype(int)
 
-            mds = manifold.MDS(n_components=dim_intrinsic, max_iter=3000, eps=1e-5, dissimilarity="precomputed", n_jobs=1, n_init=1)
+            mds = manifold.MDS(n_components=dim_intrinsic, max_iter=1000, eps=1e-6, dissimilarity="precomputed", n_jobs=1, n_init=1)
             flat_local = mds.fit(D_fill_sub, init=guess).embedding_
             stress1 = mds.stress_
             flat_local = mds.fit(D_sub_trust_original, weight=wgt, init=flat_local).embedding_
@@ -387,7 +387,7 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
             check = (stress2/dis)
             check_list.append(check)
             flat = (check < 0.05)
-            if n_neighbors >= 200:
+            if n_neighbors >= 290:
                 break
             else:
                 if flat:
@@ -395,7 +395,7 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
                     for i_row in range(knn_indexes_sub.shape[0]):
                         for i_col in range(knn_indexes_sub.shape[0]):
                             dist_mat_trust_temp[knn_indexes_sub[i_row], knn_indexes_sub[i_col]] = dis[i_row, i_col]
-                    n_neighbors = min(n_neighbors + 3, n_points)
+                    n_neighbors = min(n_neighbors + n_neighbors, n_points)
                 else:
                     break
 
