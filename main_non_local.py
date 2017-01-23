@@ -126,6 +126,7 @@ dist_mat_local = trim_distances(dist_mat_local, dist_mat_measured, n_neighbors=n
 dist_mat_true_sp = trim_distances(dist_mat_true, n_neighbors=n_neighbors_mds)
 dist_mat_measured_sp = trim_distances(dist_mat_measured, n_neighbors=n_neighbors_mds)
 
+dist_mat_local_trimmerd = numpy.array(dist_mat_local, copy=True)
 #Geodesicly Complete Distances
 
 dist_mat_net_tangent_geo = scipy.sparse.csgraph.shortest_path(dist_mat_net_tangent, directed=False)
@@ -134,8 +135,8 @@ dist_mat_local_geo = scipy.sparse.csgraph.shortest_path(dist_mat_local, directed
 dist_mat_true_sp_geo = scipy.sparse.csgraph.shortest_path(dist_mat_true_sp, directed=False)
 dist_mat_measured_sp_geo = scipy.sparse.csgraph.shortest_path(dist_mat_measured_sp, directed=False)
 
-dist_mat_local_temp = dist_mat_local
 dist_mat_local, dist_mat_local_wgt = trim_non_euc(dist_mat_local, dist_mat_local_geo,  dim_intrinsic, intrinsic_process_clusters)
+
 
 '''
 fig = plt.figure()
@@ -161,16 +162,19 @@ for i_point in range(n_points_used_for_clusters):
             ax.quiver(intrinsic_process_clusters[0, i_point], intrinsic_process_clusters[1, i_point], u[0], u[1], angles='xy', scale_units='xy', scale=1, pivot='tail', width=0.0005)
 
 '''
-mds = manifold.MDS(n_components=2, max_iter=3000, eps=1e-5, dissimilarity="precomputed", n_jobs=1, n_init=1)
+mds = manifold.MDS(n_components=2, max_iter=6000, eps=1e-30, dissimilarity="precomputed", n_jobs=1, n_init=1)
 
 #iso_embedding_intrinsic = mds.fit(dist_mat_net_intrinsic_temp, weight=dist_mat_net_intrinsic_wgt).embedding_
 #iso_embedding_tangent = mds.fit(dist_mat_net_tangent_temp, weight=dist_mat_net_tangent_wgt).embedding_
 iso_embedding_local = mds.fit(dist_mat_local).embedding_
+iso_embedding_local = mds.fit(dist_mat_local_trimmerd, weight=(dist_mat_local_trimmerd!=0).astype(int), init=iso_embedding_local).embedding_
+
+
 #iso_embedding_true_sp = mds.fit(dist_mat_true_sp_temp, weight=dist_mat_true_sp_wgt).embedding_
 #iso_embedding_true_sp = mds.fit(dist_mat_true_sp).embedding_
 
 #iso_embedding_measured_sp = mds.fit(dist_mat_measured_sp).embedding_
-#iso_embedding_true = mds.fit(dist_mat_true).embedding_
+iso_embedding_true = mds.fit(dist_mat_true).embedding_
 #iso_embedding_measured = mds.fit(dist_mat_measured).embedding_
 
 
@@ -204,9 +208,9 @@ print('iso_embedding_local:', stress_normlized)
 #stress, stress_normlized = embbeding_score(intrinsic_process_clusters, iso_embedding_measured_sp.T, titleStr="Regular Isomap", n_points=n_points_used_for_clusters)
 #print('iso_embedding_measured_sp:', stress_normlized)
 
-#print_process(iso_embedding_true.T, bounding_shape=None, color_map=color_map_clusters, titleStr="PCA on Intrinsic Space")
-#stress, stress_normlized = embbeding_score(intrinsic_process_clusters, iso_embedding_true.T, titleStr="PCA on Intrinsic Space", n_points=n_points_used_for_clusters)
-#print('iso_embedding_true:', stress_normlized)
+print_process(iso_embedding_true.T, bounding_shape=None, color_map=color_map_clusters, titleStr="PCA on Intrinsic Space")
+stress, stress_normlized = embbeding_score(intrinsic_process_clusters, iso_embedding_true.T, titleStr="PCA on Intrinsic Space", n_points=n_points_used_for_clusters)
+print('iso_embedding_true:', stress_normlized)
 
 #print_process(iso_embedding_measured.T, bounding_shape=None, color_map=color_map_clusters, titleStr="PCA on Measured Space")
 #stress, stress_normlized = embbeding_score(intrinsic_process_clusters, iso_embedding_measured.T, titleStr="PCA on Measured Space", n_points=n_points_used_for_clusters)

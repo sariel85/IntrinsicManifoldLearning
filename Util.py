@@ -330,7 +330,7 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
     dist_mat_trimmed_wgt = numpy.zeros((n_points, n_points))
     #indexs_balls = numpy.random.choice(n_points, size=n_points, replace=False)
 
-    for i_point in range(2):
+    for i_point in range(1):
         dist_mat_trust_temp = numpy.array(dist_mat_trust, copy=True)
 
         knn_indexes = numpy.argsort(dist_mat_fill[i_point], kind='quicksort')
@@ -387,18 +387,16 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
             check = (stress2/dis)
             check_list.append(check)
             flat = (check < 0.05)
-            if n_neighbors >= 290:
-                break
-            else:
-                if flat:
-                    dis = numpy.sqrt(calc_dist(flat_local))
-                    for i_row in range(knn_indexes_sub.shape[0]):
-                        for i_col in range(knn_indexes_sub.shape[0]):
-                            dist_mat_trust_temp[knn_indexes_sub[i_row], knn_indexes_sub[i_col]] = dis[i_row, i_col]
-                    n_neighbors = min(n_neighbors + n_neighbors, n_points)
-                else:
-                    break
 
+            dis = numpy.sqrt(calc_dist(flat_local))
+            for i_row in range(knn_indexes_sub.shape[0]):
+                for i_col in range(knn_indexes_sub.shape[0]):
+                    dist_mat_trust_temp[knn_indexes_sub[i_row], knn_indexes_sub[i_col]] = dis[i_row, i_col]
+
+            if n_neighbors == n_points or not(flat):
+                break
+
+            n_neighbors = min(numpy.ceil(n_neighbors*1.2), n_points)
 
 
         fig = plt.figure()
@@ -417,6 +415,10 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
 
 
         print(i_point)
+
+        #dist_mat_trimmed = dist_mat_trimmed + dist_mat_trust_temp
+
+        #dist_mat_trimmed_wgt = dist_mat_trimmed_wgt +1
         for i_row in knn_indexes_sub:
             for i_col in knn_indexes_sub:
                 dist_mat_trimmed[i_row, i_col] = dist_mat_trimmed[i_row, i_col] + dist_mat_trust_temp[i_row, i_col]
