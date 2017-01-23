@@ -3,6 +3,7 @@ from scipy.spatial.distance import cdist
 import numpy
 import matplotlib.pyplot as plt
 from math import sqrt
+from sklearn import manifold
 
 
 def get_short_range_dist(sampled_process, ind_cluster_center_points, n_knn, intrinsic_process, approximated, k=5, process_var=1):
@@ -196,9 +197,9 @@ def calc_dist(points, metrics=None):
             a2 = numpy.dot(points[:, i_x].T, tmp1)
             b2 = sum(points * numpy.dot(metrics[i_x], points), 0)
             ab = numpy.dot(points.T, tmp1)
-            dist_mat[:, i_x] = (numpy.tile(a2, (n_points, 1)) + b2.T.reshape((n_points, 1)) - 2 * ab.reshape((n_points, 1))).reshape(n_points)
+            dist_mat[:, i_x] = numpy.real((numpy.tile(a2, (n_points, 1)) + b2.T.reshape((n_points, 1)) - 2 * ab.reshape((n_points, 1))).reshape(n_points))
 
-    dist_mat = (dist_mat + dist_mat.T)/2
+    dist_mat = numpy.abs((dist_mat + dist_mat.T)/2)
 
     return dist_mat
 
@@ -268,6 +269,7 @@ def trim_distances(dist_mat, dist_mat_criteria=None, n_neighbors=10):
     for i_x in range(0, n_points):
         for i_y in range(0, n_neighbors):
             dist_mat_trim[i_x, knn_indexes[i_x, i_y]] = dist_mat[i_x, knn_indexes[i_x, i_y]]
+            dist_mat_trim[knn_indexes[i_x, i_y], i_x] = dist_mat[i_x, knn_indexes[i_x, i_y]]
     return dist_mat_trim
 
 
@@ -321,64 +323,108 @@ def print_drift(noisy_sensor_clusters, drift, titleStr):
                   noisy_sensor_clusters[2, i_point], drift[i_point, 0], drift[i_point, 1], drift[i_point, 2], length=numpy.linalg.norm(drift[i_point, :]), pivot='tail')
     ax.set_title(titleStr)
 
-def trim_non_euc(dist_mat, dim_intrinsic, intrinsic_process_clusters):
+def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process_clusters):
 
-    dist_mat_trimmed = numpy.zeros(dist_mat.shape)
-    dist_mat_trimmed_wgt = numpy.zeros(dist_mat.shape)
-    n_points = dist_mat.shape[0]
-    n_balls = 40
+    n_points = dist_mat_trust.shape[0]
+    dist_mat_trimmed = numpy.zeros((n_points, n_points))
+    dist_mat_trimmed_wgt = numpy.zeros((n_points, n_points))
     #indexs_balls = numpy.random.choice(n_points, size=n_points, replace=False)
-    is_bound = numpy.zeros(dist_mat.shape[0])
-    for i_point in range(dist_mat.shape[0]):
-        knn_indexes = numpy.argsort(dist_mat[i_point], kind='quicksort')
+
+    for i_point in range(20):
+        dist_mat_trust_temp = numpy.array(dist_mat_trust, copy=True)
+
+        knn_indexes = numpy.argsort(dist_mat_fill[i_point], kind='quicksort')
         n_neighbors = dim_intrinsic + 1
         flat = True
         check_list = []
         while flat:
             knn_indexes_sub = knn_indexes[0:n_neighbors]
 
-            A = dist_mat[knn_indexes_sub,:][:,knn_indexes_sub]
+            D_sub_trust_original = dist_mat_trust[knn_indexes_sub, :][:, knn_indexes_sub]
+
+            D_fill = scipy.sparse.csgraph.shortest_path(dist_mat_trust_temp, directed=False)
+
+            numpy.fill_diagonal(D_fill, 0)
+
+            D_fill_sub = D_fill[knn_indexes_sub, :][:, knn_indexes_sub]
+
             # square it
-            A = A ** 2
+            D_squared = D_fill_sub ** 2
 
             # centering matrix
-            n = A.shape[0]
+            n = D_squared.shape[0]
             J_c = 1. / n * (numpy.eye(n) - 1 + (n - 1) * numpy.eye(n))
 
             # perform double centering
-            B = -0.5 * (J_c.dot(A)).dot(J_c)
+            B = -0.5 * (J_c.dot(D_squared)).dot(J_c)
 
             # find eigenvalues and eigenvectors
             eigen_val, eigen_vect = numpy.linalg.eig(B)
             eigen_vect = eigen_vect.T
             eigen_val_sort_ind = numpy.argsort(-numpy.abs(eigen_val))
             eigen_val = numpy.abs(eigen_val[eigen_val_sort_ind])
-            eigen_vect = eigen_vect[eigen_val_sort_ind].T
+            eigen_vect = eigen_vect[eigen_val_sort_ind]
+            eigen_vect = eigen_vect[:dim_intrinsic].T
 
-            expl = numpy.sum(eigen_val[:dim_intrinsic])
-            res = numpy.sum(eigen_val[dim_intrinsic:])
-            check = (res/(res+expl))
+            guess = numpy.dot(numpy.diag(numpy.sqrt(numpy.abs(eigen_val[:dim_intrinsic]))), eigen_vect.T).T
+
+            wgt = (D_sub_trust_original != 0).astype(int)
+
+            mds = manifold.MDS(n_components=dim_intrinsic, max_iter=3000, eps=1e-5, dissimilarity="precomputed", n_jobs=1, n_init=1)
+            flat_local = mds.fit(D_fill_sub, init=guess).embedding_
+            stress1 = mds.stress_
+            flat_local = mds.fit(D_sub_trust_original, weight=wgt, init=flat_local).embedding_
+            stress2 = mds.stress_
+
+            flat_local = flat_local.T
+            #fig = plt.figure()
+            #ax = fig.gca()
+            #ax.scatter(flat_local[0, :], flat_local[1, :], c="k")
+
+            #expl = numpy.sum(eigen_val[:dim_intrinsic])
+            #res = numpy.sum(eigen_val[dim_intrinsic:])
+            dis = (D_sub_trust_original*wgt).sum()
+            check = (stress2/dis)
             check_list.append(check)
-            flat = (check<0.2)
-            if n_neighbors == n_points:
-                flat = False
+            flat = (check < 0.05)
+            if n_neighbors >= 200:
+                break
             else:
-                n_neighbors = min(n_neighbors + 3, n_points)
+                if flat:
+                    dis = numpy.sqrt(calc_dist(flat_local))
+                    for i_row in range(knn_indexes_sub.shape[0]):
+                        for i_col in range(knn_indexes_sub.shape[0]):
+                            dist_mat_trust_temp[knn_indexes_sub[i_row], knn_indexes_sub[i_col]] = dis[i_row, i_col]
+                    n_neighbors = min(n_neighbors + 3, n_points)
+                else:
+                    break
+
+
 
         fig = plt.figure()
         ax = fig.gca()
         ax.scatter(intrinsic_process_clusters[0, :], intrinsic_process_clusters[1, :], c="k")
-        for i_point in knn_indexes_sub:
-            ax.scatter(intrinsic_process_clusters[0, i_point], intrinsic_process_clusters[1, i_point], c='r')
+        for j_point in knn_indexes_sub:
+            ax.scatter(intrinsic_process_clusters[0, j_point], intrinsic_process_clusters[1, j_point], c='r')
         ax.scatter(intrinsic_process_clusters[0, knn_indexes_sub[0]], intrinsic_process_clusters[1, knn_indexes_sub[0]], c='g')
 
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.scatter(flat_local[0, 0], flat_local[1, 0], c="g")
+        ax.scatter(flat_local[0, 1:], flat_local[1, 1:], c="r")
+        plt.axis('equal')
         plt.show(block=False)
+
+
+
+
         print(i_point)
         for i_row in knn_indexes_sub:
             for i_col in knn_indexes_sub:
-                dist_mat_trimmed[i_row, i_col] = dist_mat[i_row, i_col]
-                dist_mat_trimmed_wgt[i_row, i_col] = 1
+                dist_mat_trimmed[i_row, i_col] = dist_mat_trust_temp[i_row, i_col]
+                dist_mat_trimmed_wgt[i_row, i_col] = dist_mat_trimmed_wgt[i_row, i_col] + 1
 
+    dist_mat_trimmed = dist_mat_trimmed/numpy.maximum(dist_mat_trimmed_wgt, numpy.ones(dist_mat_trimmed_wgt.shape))
     return dist_mat_trimmed, dist_mat_trimmed_wgt
 
 
