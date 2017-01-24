@@ -293,22 +293,26 @@ def print_metrics(noisy_sensor_clusters, metric_list, intrinsic_dim, titleStr, s
             metric = metric_list[i_point]
             [u, s, v] = numpy.linalg.svd(metric)
             u = numpy.dot(u[:, 0:intrinsic_dim], numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
+            sign = numpy.sign(u[0, 0])
             ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                      noisy_sensor_clusters[2, i_point], u[0, 0], u[1, 0], u[2, 0],
+                      noisy_sensor_clusters[2, i_point], sign*u[0, 0], sign*u[1, 0], sign*u[2, 0],
                       length=3*numpy.sqrt(scale), pivot='tail')
+            sign = numpy.sign(u[0, 1])
             ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                      noisy_sensor_clusters[2, i_point], u[0, 1], u[1, 1], u[2, 1],
+                      noisy_sensor_clusters[2, i_point], sign*u[0, 1], sign*u[1, 1], sign*u[2, 1],
                       length=3*numpy.sqrt(scale), pivot='tail')
     else:
         for i_point in range(0, n_points):
             metric = metric_list[i_point]
             [u, s, v] = numpy.linalg.svd(metric)
             u = numpy.dot(u[:, 0:intrinsic_dim], numpy.sqrt(scale)*numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
+            sign = numpy.sign(u[0, 0])
             ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                      noisy_sensor_clusters[2, i_point], u[0, 0], u[1, 0], u[2, 0],
+                      noisy_sensor_clusters[2, i_point], sign*u[0, 0], sign*u[1, 0], sign*u[2, 0],
                       length=numpy.linalg.norm(u[:, 0]), pivot='tail')
+            sign = numpy.sign(u[0, 1])
             ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                      noisy_sensor_clusters[2, i_point], u[0, 1], u[1, 1], u[2, 1],
+                      noisy_sensor_clusters[2, i_point], sign*u[0, 1], sign*u[1, 1], sign*u[2, 1],
                       length=numpy.linalg.norm(u[:, 1]), pivot='tail')
     ax.set_title(titleStr)
 
@@ -330,7 +334,7 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
     dist_mat_trimmed_wgt = numpy.zeros((n_points, n_points))
     #indexs_balls = numpy.random.choice(n_points, size=n_points, replace=False)
 
-    for i_point in range(5):
+    for i_point in range(15):
         dist_mat_trust_temp = numpy.array(dist_mat_trust, copy=True)
 
         knn_indexes = numpy.argsort(dist_mat_fill[i_point], kind='quicksort')
