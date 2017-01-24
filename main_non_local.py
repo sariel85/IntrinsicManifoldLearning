@@ -12,8 +12,8 @@ sim_dir_name = "Non Convex" #Which dataset to run
 
 n_points_used_for_dynamics = 2000 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 500
-n_points_used_for_clusters = 300 #How many cluster to use in Kernal method
-n_neighbors_cov = 30 #How neighboors to use from which to infer dynamics locally
+n_points_used_for_clusters = 500 #How many cluster to use in Kernal method
+n_neighbors_cov = 50 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 10 #How many short distances are kept for each cluster point
 n_hidden_drift = 4 #How many nodes in hidden layer that learns intrinsic dynamics
 n_hidden_tangent = 20 #How many nodes in hidden layer that learns tangent plane
