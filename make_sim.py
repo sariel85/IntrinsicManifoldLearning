@@ -84,15 +84,15 @@ bounding_shape = BoundingShape(predef_type="2D Unit Circle")
 #print_potential(potential_func, x_low=-1, x_high=1, y_low=-1, y_high=1, step=0.05)
 '''
 
-'''
+
 intrinsic_variance = 0.001
 sim_dir_name = "Rectangle"
 bounding_shape = BoundingShape(predef_type="2D Unit Square")
 #print_potential(potential_func, x_low=-1, x_high=1, y_low=-1, y_high=1, step=0.05)
+
+
+
 '''
-
-
-
 sim_dir_name = "Non Convex"
 intrinsic_variance = 0.001
 
@@ -103,7 +103,7 @@ def potential_func (point):
     bounding_shape = BoundingShape(vertices=[(7.7, 15.6), (7.7, -3.96), (-6.3, -3.96), (-6.3, -2.54), (-9.30, -2.54), (-9.30, 8.4), (-11.15, 8.4), (-11.15, 11.95), (-9.35, 11.95), (-9.35, 10.85), (0.05, 10.85), (0.05, 15.6)])
     return bounding_potential(point, bounding_shape)
     print_potential(potential_func, x_low=-18, x_high=18, y_low=-13, y_high=25, step=0.2)
-
+'''
 
 '''
 sim_dir_name = "Triangle"

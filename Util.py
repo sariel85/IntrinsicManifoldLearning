@@ -222,8 +222,8 @@ def get_metrics_from_points(cluster_centers, input_base, input_step, n_neighbors
         s_def = numpy.copy(s)
         s_def[dim_intrinsic:] = float('Inf')
         s_def = 1 / s_def
-        if s_def[dim_intrinsic:] < numpy.finfo(numpy.float32).eps:
-            s_full[dim_intrinsic:] = numpy.finfo(numpy.float32).eps
+        #if s_def[dim_intrinsic:] < numpy.finfo(numpy.float32).eps:
+        #    s_full[dim_intrinsic:] = numpy.finfo(numpy.float32).eps
 
         s_full = 1 / s_full
         cov_list_def[x] = intrinsic_variance*numpy.dot(U, numpy.dot(numpy.diag(s_def), V))
@@ -334,11 +334,11 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
     dist_mat_trimmed_wgt = numpy.zeros((n_points, n_points))
     #indexs_balls = numpy.random.choice(n_points, size=n_points, replace=False)
 
-    for i_point in range(15):
+    for i_point in range(1):
         dist_mat_trust_temp = numpy.array(dist_mat_trust, copy=True)
 
         knn_indexes = numpy.argsort(dist_mat_fill[i_point], kind='quicksort')
-        n_neighbors = dim_intrinsic + 1
+        n_neighbors = 40
         flat = True
         check_list = []
         while flat:
@@ -363,21 +363,21 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
             B = -0.5 * (J_c.dot(D_squared)).dot(J_c)
 
             # find eigenvalues and eigenvectors
-            eigen_val, eigen_vect = numpy.linalg.eig(B)
-            eigen_vect = eigen_vect.T
+            U, eigen_val, V = numpy.linalg.svd(B)
+            eigen_vect = V
             eigen_val_sort_ind = numpy.argsort(-numpy.abs(eigen_val))
             eigen_val = numpy.abs(eigen_val[eigen_val_sort_ind])
             eigen_vect = eigen_vect[eigen_val_sort_ind]
             eigen_vect = eigen_vect[:dim_intrinsic].T
 
-            guess = numpy.dot(numpy.diag(numpy.sqrt(numpy.abs(eigen_val[:dim_intrinsic]))), eigen_vect.T).T
+            guess = numpy.real(numpy.dot(numpy.diag(numpy.sqrt(numpy.abs(eigen_val[:dim_intrinsic]))), eigen_vect.T).T)
 
             wgt = (D_sub_trust_original != 0).astype(int)
 
-            mds = manifold.MDS(n_components=dim_intrinsic, max_iter=1000, eps=1e-6, dissimilarity="precomputed", n_jobs=1, n_init=1)
-            flat_local = mds.fit(D_fill_sub, init=guess).embedding_
-            stress1 = mds.stress_
-            flat_local = mds.fit(D_sub_trust_original, weight=wgt, init=flat_local).embedding_
+            mds = manifold.MDS(n_components=dim_intrinsic, max_iter=1000, eps=1e-9, dissimilarity="precomputed", n_jobs=1, n_init=1)
+            #flat_local = mds.fit(D_fill_sub, init=guess).embedding_
+            #stress1 = mds.stress_
+            flat_local = mds.fit(D_sub_trust_original, weight=wgt, init=guess).embedding_
             stress2 = mds.stress_
 
             flat_local = flat_local.T
@@ -390,19 +390,37 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
             dis = (D_sub_trust_original*wgt).sum()
             check = (stress2/dis)
             check_list.append(check)
-            flat = (check < 0.05)
+            #flat = (check < 0.05)
 
             dis = numpy.sqrt(calc_dist(flat_local))
             for i_row in range(knn_indexes_sub.shape[0]):
                 for i_col in range(knn_indexes_sub.shape[0]):
                     dist_mat_trust_temp[knn_indexes_sub[i_row], knn_indexes_sub[i_col]] = dis[i_row, i_col]
 
-            if n_neighbors == n_points or not(flat):
+            fig = plt.figure()
+            ax = fig.gca()
+            ax.scatter(intrinsic_process_clusters[0, :], intrinsic_process_clusters[1, :], c="k")
+            for j_point in knn_indexes_sub:
+                ax.scatter(intrinsic_process_clusters[0, j_point], intrinsic_process_clusters[1, j_point], c='r')
+            ax.scatter(intrinsic_process_clusters[0, knn_indexes_sub[0]],
+                       intrinsic_process_clusters[1, knn_indexes_sub[0]], c='g')
+            plt.axis('equal')
+
+            fig = plt.figure()
+            ax = fig.gca()
+            ax.scatter(flat_local[0, 0], flat_local[1, 0], c="g")
+            ax.scatter(flat_local[0, 1:], flat_local[1, 1:], c="r")
+            plt.axis('equal')
+            plt.show(block=False)
+
+            if n_neighbors == n_points:
                 break
 
-            n_neighbors = min(numpy.ceil(n_neighbors*1.2), n_points)
+
+            n_neighbors = min(numpy.ceil(n_neighbors*1.5), n_points)
 
 
+        '''
         fig = plt.figure()
         ax = fig.gca()
         ax.scatter(intrinsic_process_clusters[0, :], intrinsic_process_clusters[1, :], c="k")
@@ -416,7 +434,7 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
         ax.scatter(flat_local[0, 1:], flat_local[1, 1:], c="r")
         plt.axis('equal')
         plt.show(block=False)
-
+        '''
 
         print(i_point)
 

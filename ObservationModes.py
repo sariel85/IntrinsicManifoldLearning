@@ -184,8 +184,8 @@ def antena(intrinsic_process, centers, amplitudes, range_factor):
         dists = (intrinsic_process.T - centers[:, i_antena].T).T
         dists = dists * dists
         dists = numpy.sqrt(numpy.sum(dists, axis=0))
-        observed_process[i_antena, :] = amplitudes[i_antena]*(1/(range_factor[i_antena]+dists))
+        observed_process[i_antena, :] = amplitudes[i_antena]*(1/(dists))
         #observed_process[i_antena, :] = dists
-    return 10*observed_process
+    return observed_process
 
 

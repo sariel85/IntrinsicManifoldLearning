@@ -6,7 +6,7 @@ from DataGeneration import BoundingShape, ItoGenerator, print_process, create_co
 import matplotlib.pyplot as plt
 from ObservationModes import *
 
-sim_dir_name = "2D Unit Circle"
+sim_dir_name = "Rectangle"
 intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
 
@@ -23,16 +23,22 @@ n_points = intrinsic_process_base.shape[1]
 #exact_sensor_base = twirl(intrinsic_process_base, k=6)
 #exact_sensor_step = twirl(intrinsic_process_step, k=6)
 
-'''
-ant_1 = numpy.asarray([[10], [-7]])
-ant_2 = numpy.asarray([[10], [20]])
-ant_3 = numpy.asarray([[-16], [5]])
-range_factor = [[30], [30], [30]]
+
+#ant_1 = numpy.asarray([[0.75], [-0.5]])
+#ant_2 = numpy.asarray([[1.5], [1.5]])
+#ant_3 = numpy.asarray([[-0.5], [1.5]])
+
+ant_1 = numpy.asarray([[0.75], [-0.5]])
+ant_2 = numpy.asarray([[1.5], [1.5]])
+ant_3 = numpy.asarray([[-0.5], [1.5]])
+
+range_factor = [[10], [10], [10]]
 antenas = numpy.concatenate((ant_1, ant_2, ant_3), axis=1)
 amplitudes = [[1],[3],[7]]
 exact_sensor_base = antena(intrinsic_process_base, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
 exact_sensor_step = antena(intrinsic_process_step, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
-'''
+
+
 #exact_sensor_base = twirl(intrinsic_process_base, k=0.3)
 #exact_sensor_step = twirl(intrinsic_process_step, k=0.3)
 #exact_sensor_base = swissroll(intrinsic_process_base, k=8)
@@ -40,8 +46,8 @@ exact_sensor_step = antena(intrinsic_process_step, centers=antenas, amplitudes=a
 
 #exact_sensor_base = singers_mushroom(intrinsic_process_base)
 #exact_sensor_step = singers_mushroom(intrinsic_process_step)
-exact_sensor_base = whole_sphere(intrinsic_process_base)
-exact_sensor_step = whole_sphere(intrinsic_process_step)
+#exact_sensor_base = whole_sphere(intrinsic_process_base)
+#exact_sensor_step = whole_sphere(intrinsic_process_step)
 
 
 # Realistic Measurement
@@ -55,7 +61,7 @@ numpy.savetxt(sim_dir + '/' + 'sensor_noisy_base.txt', noisy_sensor_base, delimi
 numpy.savetxt(sim_dir + '/' + 'sensor_noisy_step.txt', noisy_sensor_step, delimiter=',')
 numpy.save(sim_dir + '/' + 'measurement_variance', measurement_variance)
 
-n_plot_points = 10000
+n_plot_points = 5000
 n_plot_points = min(n_points, n_plot_points)
 points_plot_index = numpy.random.choice(n_points, size=n_plot_points, replace=False)
 

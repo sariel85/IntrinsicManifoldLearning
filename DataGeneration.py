@@ -319,7 +319,7 @@ class BoundingShape(object):
         elif predef_type == '2D Unit Square':
             self.shape_type = "Box"
             self.origin = numpy.asarray([[0], [0]], dtype=numpy.float32)
-            self.scale = numpy.asarray([[3], [1]], dtype=numpy.float32)
+            self.scale = numpy.asarray([[1], [1]], dtype=numpy.float32)
             self.dim = 2
         elif predef_type == '3D Unit Cube':
             self.shape_type = "Box"

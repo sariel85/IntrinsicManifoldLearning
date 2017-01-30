@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from DataGeneration import print_process, create_color_map
 import numpy
-sim_dir_name = "Non Convex"
+sim_dir_name = "Rectangle"
 
 #sim_dir_name = "2D Room - Exact Limits - More Points - No Override"
 intrinsic_process_file_name = 'intrinsic_process.npy'
@@ -12,7 +12,7 @@ sim_dir = './' + sim_dir_name
 
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
 
-n_points_used = 10000
+n_points_used = 20000
 
 intrinsic_simulated_process = numpy.load(sim_dir + '/' + intrinsic_process_file_name)
 
