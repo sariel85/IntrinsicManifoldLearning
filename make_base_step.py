@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from DataGeneration import print_process, create_color_map
 import numpy
-sim_dir_name = "Rectangle"
+sim_dir_name = "2D Non Convex"
 
 #sim_dir_name = "2D Room - Exact Limits - More Points - No Override"
 intrinsic_process_file_name = 'intrinsic_process.npy'
@@ -12,7 +12,7 @@ sim_dir = './' + sim_dir_name
 
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
 
-n_points_used = 20000
+n_points_used = 50000
 
 intrinsic_simulated_process = numpy.load(sim_dir + '/' + intrinsic_process_file_name)
 
@@ -25,8 +25,8 @@ points_used_index = numpy.random.choice(intrinsic_simulated_process.shape[1]-1, 
 intrinsic_process_base = intrinsic_simulated_process[:, points_used_index]
 intrinsic_process_step = intrinsic_simulated_process[:, points_used_index+1]
 
-numpy.savetxt(sim_dir + '/' + 'intrinsic_base.txt', intrinsic_process_base, delimiter=',')
-numpy.savetxt(sim_dir + '/' + 'intrinsic_step.txt', intrinsic_process_step, delimiter=',')
+numpy.savetxt(sim_dir + '/' + 'intrinsic_base.txt', intrinsic_process_base.T, delimiter=',')
+numpy.savetxt(sim_dir + '/' + 'intrinsic_step.txt', intrinsic_process_step.T, delimiter=',')
 
 
 print_process(intrinsic_process_base, titleStr="Intrinsic Base Process")

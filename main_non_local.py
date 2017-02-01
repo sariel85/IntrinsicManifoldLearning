@@ -1,8 +1,5 @@
 from __future__ import print_function
 from __future__ import absolute_import
-import time
-import os
-from non_local_tangent import non_local_tangent_net
 from DataGeneration import print_process, create_color_map, print_dynamics
 from Util import *
 import numpy
@@ -12,8 +9,8 @@ sim_dir_name = "2D Room - Exact Limits" #Which dataset to run
 
 n_points_used_for_dynamics = 50000 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 500
-n_points_used_for_clusters = 5000 #How many cluster to use in Kernal method
-n_points_used_for_clusters_2 = 2000 #How many cluster to use in Kernal method
+n_points_used_for_clusters = 8000 #How many cluster to use in Kernal method
+n_points_used_for_clusters_2 = 3000 #How many cluster to use in Kernal method
 
 n_neighbors_cov = 20 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 20 #How many short distances are kept for each cluster point
@@ -129,10 +126,12 @@ metric_list_def, metric_list_full = get_metrics_from_points(noisy_sensor_cluster
 dist_mat_true_squared = calc_dist(intrinsic_process_clusters)
 dist_mat_measured_squared = calc_dist(noisy_sensor_clusters)
 dist_mat_local_squared = calc_dist(noisy_sensor_clusters, metric_list_def)
+dist_mat_local_full_squared = calc_dist(noisy_sensor_clusters, metric_list_full)
 
 dist_mat_true = numpy.sqrt(dist_mat_true_squared)
 dist_mat_measured = numpy.sqrt(dist_mat_measured_squared)
 dist_mat_local = numpy.sqrt(dist_mat_local_squared)
+dist_mat_local_full = numpy.sqrt(dist_mat_local_full_squared)
 
 #dist_mat_measured_KL = dist_mat_measured_KL+dist_mat_local_squared
 #Keep only best distances
@@ -141,7 +140,7 @@ dist_mat_local = numpy.sqrt(dist_mat_local_squared)
 #dist_mat_net_intrinsic_trimmed = trim_distances(dist_mat_net_intrinsic, dist_mat_measured, n_neighbors=n_neighbors_mds)
 dist_mat_measured_trimmed = trim_distances(dist_mat_measured, n_neighbors=10)
 dist_mat_measured_geo = scipy.sparse.csgraph.shortest_path(dist_mat_measured_trimmed, directed=False)
-dist_mat_local_trimmed = trim_distances(dist_mat_local, dist_mat_true, n_neighbors=n_neighbors_mds)
+dist_mat_local_trimmed = trim_distances(dist_mat_local, dist_mat_local_full, n_neighbors=n_neighbors_mds)
 #dist_mat_true_trimmed = trim_distances(dist_mat_true, dist_mat_true, n_neighbors=n_neighbors_mds)
 
 
