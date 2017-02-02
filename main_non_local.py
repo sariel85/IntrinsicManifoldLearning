@@ -15,8 +15,8 @@ n_points_used_for_clusters_2 = 300 #How many cluster to use in Kernal method
 n_neighbors_cov = 50 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 10 #How many short distances are kept for each cluster point
 n_hidden_drift = 4 #How many nodes in hidden layer that learns intrinsic dynamics
-n_hidden_tangent = 20 #How many nodes in hidden layer that learns tangent plane
-n_hidden_int = 20 #How many nodes in hidden layer that learns intrinsic dynamics
+n_hidden_tangent = 40 #How many nodes in hidden layer that learns tangent plane
+n_hidden_int = 40 #How many nodes in hidden layer that learns intrinsic dynamics
 ########################################################################################################################
 
 sim_dir = './' + sim_dir_name
