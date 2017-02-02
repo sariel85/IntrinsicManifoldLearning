@@ -68,7 +68,7 @@ def whole_sphere(intrinsic_process):
 
     observed_process[0] = numpy.sin(5*radius)*numpy.sin(theta)
     observed_process[1] = numpy.sin(5*radius)*numpy.cos(theta)
-    observed_process[2] = numpy.cos(5*radius)
+    observed_process[2] = -numpy.cos(5*radius)
     return observed_process
 
 

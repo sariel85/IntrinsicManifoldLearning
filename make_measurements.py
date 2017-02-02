@@ -47,8 +47,8 @@ exact_sensor_step = antena(intrinsic_process_step, centers=antenas, amplitudes=a
 
 exact_sensor_base = singers_mushroom(intrinsic_process_base)
 exact_sensor_step = singers_mushroom(intrinsic_process_step)
-exact_sensor_base = whole_sphere(intrinsic_process_base)
-exact_sensor_step = whole_sphere(intrinsic_process_step)
+exact_sensor_base = whole_sphere(intrinsic_process_base)/2
+exact_sensor_step = whole_sphere(intrinsic_process_step)/2
 
 
 # Realistic Measurement

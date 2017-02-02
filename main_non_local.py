@@ -15,7 +15,7 @@ n_points_used_for_clusters_2 = 400 #How many cluster to use in Kernal method
 n_neighbors_cov = 10 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 10 #How many short distances are kept for each cluster point
 n_hidden_drift = 4 #How many nodes in hidden layer that learns intrinsic dynamics
-n_hidden_tangent = 30 #How many nodes in hidden layer that learns tangent plane
+n_hidden_tangent = 10 #How many nodes in hidden layer that learns tangent plane
 n_hidden_int = 10 #How many nodes in hidden layer that learns intrinsic dynamics
 ########################################################################################################################
 
@@ -34,6 +34,8 @@ measurement_variance = numpy.load(sim_dir + '/' + 'measurement_variance.npy').as
 
 intrinsic_process_base = intrinsic_process_base[:, :noisy_sensor_base.shape[1]]
 intrinsic_process_step = intrinsic_process_step[:, :noisy_sensor_step.shape[1]]
+
+#measurement_variance = 0.00001
 
 
 #ts = time.time()
@@ -103,15 +105,17 @@ metric_list_net_tangent, metric_list_net_intrinsic = get_metrics_from_net(non_lo
 
 #print_drift(noisy_sensor_clusters, net_drift, titleStr="Net Learned Drift")
 
-print_metrics(noisy_sensor_clusters, metric_list_net_tangent, intrinsic_dim=dim_intrinsic, titleStr="Net Learned Tangent Space", scale=intrinsic_variance, space_mode=True)
+print_metrics(noisy_sensor_clusters, metric_list_net_tangent, intrinsic_dim=dim_intrinsic, titleStr="Net Learned Tangent Space", scale=intrinsic_variance*0.1, space_mode=True)
 
 print_metrics(noisy_sensor_clusters, metric_list_net_intrinsic, intrinsic_dim=dim_intrinsic, titleStr="Net Learned Intrinsic Jacobians", scale=intrinsic_variance, space_mode=False)
 
 metric_list_def, metric_list_full = get_metrics_from_points(noisy_sensor_clusters, noisy_sensor_base, noisy_sensor_step, n_neighbors_cov, dim_intrinsic, intrinsic_variance)
 
-print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Tangent Jacobians", scale=intrinsic_variance, space_mode=True)
+print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Tangent Jacobians", scale=intrinsic_variance*0.1, space_mode=True)
 
 print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Intrinsic Jacobians", scale=intrinsic_variance, space_mode=False)
+
+plt.show(block=True)
 
 
 dist_mat_true_squared = calc_dist(intrinsic_process_clusters)
