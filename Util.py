@@ -334,7 +334,7 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
     dist_mat_trimmed_wgt = numpy.zeros((n_points, n_points))
     #indexs_balls = numpy.random.choice(n_points, size=n_points, replace=False)
 
-    for i_point in range(1):
+    for i_point in range(3):
         dist_mat_trust_temp = numpy.array(dist_mat_trust, copy=True)
 
         knn_indexes = numpy.argsort(dist_mat_fill[i_point], kind='quicksort')
@@ -374,7 +374,7 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
 
             wgt = (D_sub_trust_original != 0).astype(int)
 
-            mds = manifold.MDS(n_components=dim_intrinsic, max_iter=1000, eps=1e-9, dissimilarity="precomputed", n_jobs=1, n_init=1)
+            mds = manifold.MDS(n_components=dim_intrinsic, max_iter=2000, eps=1e-9, dissimilarity="precomputed", n_jobs=1, n_init=1)
             #flat_local = mds.fit(D_fill_sub, init=guess).embedding_
             #stress1 = mds.stress_
             flat_local = mds.fit(D_sub_trust_original, weight=wgt, init=guess).embedding_
@@ -399,11 +399,23 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
 
             fig = plt.figure()
             ax = fig.gca()
+            #ax = fig.add_subplot(111, projection='3d')
             ax.scatter(intrinsic_process_clusters[0, :], intrinsic_process_clusters[1, :], c="k")
             for j_point in knn_indexes_sub:
                 ax.scatter(intrinsic_process_clusters[0, j_point], intrinsic_process_clusters[1, j_point], c='r')
             ax.scatter(intrinsic_process_clusters[0, knn_indexes_sub[0]],
                        intrinsic_process_clusters[1, knn_indexes_sub[0]], c='g')
+            plt.axis('equal')
+
+            eigen_vect = eigen_vect.T
+
+            fig = plt.figure()
+            ax = fig.gca()
+            ax.scatter(eigen_vect[0, 0], eigen_vect[1, 0], c="g")
+            ax.scatter(eigen_vect[0, 1:], eigen_vect[1, 1:], c="r")
+            plt.axis('equal')
+            plt.show(block=False)
+            plt.title("Classical MDS")
             plt.axis('equal')
 
             fig = plt.figure()
@@ -412,6 +424,8 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
             ax.scatter(flat_local[0, 1:], flat_local[1, 1:], c="r")
             plt.axis('equal')
             plt.show(block=False)
+            plt.title("After LS-MDS Correction")
+            plt.axis('equal')
 
             if n_neighbors == n_points:
                 break
@@ -449,9 +463,9 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
     dist_mat_trimmed = dist_mat_trimmed/numpy.maximum(dist_mat_trimmed_wgt, numpy.ones(dist_mat_trimmed_wgt.shape))
     return dist_mat_trimmed, dist_mat_trimmed_wgt
 
-def intrinsic_isomaps(dist_mat_geo, dist_mat_short, dim_intrinsic):
+def intrinsic_isomaps(dist_mat_geo, dist_mat_short, dim_intrinsic, noisy_sensor_clusters_2):
 
-    # dist_mat_local_geo, dist_mat_local_flat_wgt = trim_non_euc(dist_mat_local_trimmed, dist_mat_local_geo,  dim_intrinsic, intrinsic_process_clusters)
+    #dist_mat_geo, dist_mat_local_flat_wgt = trim_non_euc(dist_mat_short, dist_mat_geo,  dim_intrinsic, noisy_sensor_clusters_2)
 
     D_squared = dist_mat_geo ** 2
 

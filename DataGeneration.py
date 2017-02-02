@@ -103,6 +103,11 @@ def print_process(input_process, indexs=None, bounding_shape=None, color_map=Non
             ax.set_xlim([ax_limits[0], ax_limits[1]])
             ax.set_ylim([ax_limits[2], ax_limits[3]])
 
+        plt.title(titleStr)
+        plt.show(block=False)
+        return ax
+
+
     elif process.shape[0] == 3:
 
         if ax is None:
@@ -129,9 +134,12 @@ def print_process(input_process, indexs=None, bounding_shape=None, color_map=Non
             ax.set_ylim([ax_limits[2], ax_limits[3]])
             ax.set_zlim([ax_limits[4], ax_limits[5]])
 
-    plt.title(titleStr)
-    plt.show(block=False)
-    return ax
+        plt.title(titleStr)
+        plt.show(block=False)
+        return ax
+
+    else:
+        return None
 
 def print_drift(process, drift,  indexs=None, bounding_shape=None, color_map=None, ax=None, titleStr=None, covs=None):
 

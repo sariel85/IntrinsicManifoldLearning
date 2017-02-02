@@ -10,7 +10,7 @@ sim_dir_name = "2D Unit Circle"
 intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
 
-measurement_variance = 0.0001
+measurement_variance = 0.0000002
 #measurement_variance = 0.0000001
 
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
