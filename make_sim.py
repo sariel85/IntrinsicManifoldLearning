@@ -60,7 +60,7 @@ def potential_func (point):
 
 '''
 
-sim_dir_name = "2D Non Convex"
+sim_dir_name = "2D Non Convex - 2"
 intrinsic_variance = 0.1
 
 bounding_shape = BoundingShape( vertices=[(2.4, 0.5), (2.4, 1.13), (1, 1.13), (1, 3.8), (0.3, 3.8), (0.3,5.2), (1.4, 5),(1.4,4.2), (3.7,4.2), (3.7,6.1), (15.3, 6.1), (15.3, 3.4), (14.1, 3.4), (14.1, 1.25), (15.25,1.25), (15.25, 0.5), (10.4, 0.5), (10.4, 4.25), (6.2, 4.25), (6.2, 0.5)])

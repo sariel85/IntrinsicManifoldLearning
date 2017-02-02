@@ -449,6 +449,44 @@ def trim_non_euc(dist_mat_trust, dist_mat_fill, dim_intrinsic, intrinsic_process
     dist_mat_trimmed = dist_mat_trimmed/numpy.maximum(dist_mat_trimmed_wgt, numpy.ones(dist_mat_trimmed_wgt.shape))
     return dist_mat_trimmed, dist_mat_trimmed_wgt
 
+def intrinsic_isomaps(dist_mat_geo, dist_mat_short, dim_intrinsic):
+
+    # dist_mat_local_geo, dist_mat_local_flat_wgt = trim_non_euc(dist_mat_local_trimmed, dist_mat_local_geo,  dim_intrinsic, intrinsic_process_clusters)
+
+    D_squared = dist_mat_geo ** 2
+
+    # centering matrix
+    n = D_squared.shape[0]
+    J_c = 1. / n * (numpy.eye(n) - 1 + (n - 1) * numpy.eye(n))
+
+    # perform double centering
+    B = -0.5 * (J_c.dot(D_squared)).dot(J_c)
+
+    # find eigenvalues and eigenvectors
+    U, eigen_val, V = numpy.linalg.svd(B)
+    eigen_vect = V
+    eigen_val_sort_ind = numpy.argsort(-numpy.abs(eigen_val))
+    eigen_val = numpy.abs(eigen_val[eigen_val_sort_ind])
+    eigen_vect = eigen_vect[eigen_val_sort_ind]
+    eigen_vect = eigen_vect[:dim_intrinsic].T
+
+    mds = manifold.MDS(n_components=2, max_iter=2000, eps=1e-5, dissimilarity="precomputed", n_jobs=1, n_init=1)
+    iso_embedding = mds.fit(dist_mat_geo, init=eigen_vect).embedding_
+    #print_process(iso_embedding_local.T, bounding_shape=None, color_map=color_map_clusters_2,
+    #              titleStr="Isomap with Locally Learned Intrinsic Metric", align_points=intrinsic_process_clusters)
+    # stress, stress_normlized = embbeding_score(intrinsic_process_clusters, iso_embedding_local.T, titleStr="Diffusion Maps with Locally Learned Intrinsic Metric")
+    mds = manifold.MDS(n_components=2, max_iter=2000, eps=1e-5, dissimilarity="precomputed", n_jobs=1, n_init=1)
+
+    iso_embedding = mds.fit(dist_mat_short, weight=(dist_mat_short != 0).astype(int),
+                                  init=iso_embedding).embedding_
+    #print_process(iso_embedding_local.T, bounding_shape=None, color_map=color_map_clusters_2,
+    #              titleStr="Isomap with Locally Learned Intrinsic Metric", align_points=intrinsic_process_clusters)
+    #stress, stress_normlized = embbeding_score(intrinsic_process_clusters_2, iso_embedding_local.T,
+    #                                           titleStr="Diffusion Maps with Locally Learned Intrinsic Metric")
+    return iso_embedding
+
+
+
 
 
 

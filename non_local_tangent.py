@@ -311,9 +311,9 @@ class non_local_tangent_net(object):
         return updates
 
     def train_net(self, noisy_sensor_base, noisy_sensor_step):
-        max_epoch_drift = 2000/20
-        max_epoch_tangent = 800/20
-        max_epoch_int = 4000/20
+        max_epoch_drift = 1000
+        max_epoch_tangent = 1000
+        max_epoch_int = 2000
 
         n_points = noisy_sensor_base.shape[1]
 
@@ -453,7 +453,7 @@ class non_local_tangent_net(object):
         cost_term_valid_2 = []
 
         iteration = 0
-        n_batch = 100
+        n_batch = n_points
 
         max_iteration_int = (n_points/n_batch)*max_epoch_int
 

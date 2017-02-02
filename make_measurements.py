@@ -6,11 +6,11 @@ from DataGeneration import BoundingShape, ItoGenerator, print_process, create_co
 import matplotlib.pyplot as plt
 from ObservationModes import *
 
-sim_dir_name = "Rectangle"
+sim_dir_name = "Non Convex"
 intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
 
-measurement_variance = 0.0000000
+measurement_variance = 0.005
 
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
 
@@ -27,7 +27,7 @@ n_points = intrinsic_process_base.shape[1]
 #ant_1 = numpy.asarray([[0.75], [-0.5]])
 #ant_2 = numpy.asarray([[1.5], [1.5]])
 #ant_3 = numpy.asarray([[-0.5], [1.5]])
-
+'''
 ant_1 = numpy.asarray([[0.75], [-0.5]])
 ant_2 = numpy.asarray([[1.5], [1.5]])
 ant_3 = numpy.asarray([[-0.5], [1.5]])
@@ -37,17 +37,17 @@ antenas = numpy.concatenate((ant_1, ant_2, ant_3), axis=1)
 amplitudes = [[1],[3],[7]]
 exact_sensor_base = antena(intrinsic_process_base, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
 exact_sensor_step = antena(intrinsic_process_step, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
-
+'''
 
 #exact_sensor_base = twirl(intrinsic_process_base, k=0.3)
 #exact_sensor_step = twirl(intrinsic_process_step, k=0.3)
 #exact_sensor_base = swissroll(intrinsic_process_base, k=8)
 #exact_sensor_step = swissroll(intrinsic_process_step, k=8)
 
-#exact_sensor_base = singers_mushroom(intrinsic_process_base)
-#exact_sensor_step = singers_mushroom(intrinsic_process_step)
-#exact_sensor_base = whole_sphere(intrinsic_process_base)
-#exact_sensor_step = whole_sphere(intrinsic_process_step)
+exact_sensor_base = singers_mushroom(intrinsic_process_base)
+exact_sensor_step = singers_mushroom(intrinsic_process_step)
+exact_sensor_base = whole_sphere(intrinsic_process_base)
+exact_sensor_step = whole_sphere(intrinsic_process_step)
 
 
 # Realistic Measurement

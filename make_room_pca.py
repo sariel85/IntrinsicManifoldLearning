@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing
 import cv2
 
-sim_dir_name = "2D Room - Exact Limits"
+sim_dir_name = "2D Non Convex"
 sim_dir = './' + sim_dir_name
 video_file = sim_dir + '/' + 'new_vid.avi'
 
@@ -19,7 +19,7 @@ frame_hight = numpy.int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 frame_width = numpy.int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 n_pixels = numpy.int(3 * frame_hight * frame_width)
 
-movie_frames = numpy.empty([n_frames, 3*frame_hight*frame_width/16])
+movie_frames = numpy.empty([n_frames, 3*frame_hight*frame_width])
 
 while not cap.isOpened():
     cap = cv2.VideoCapture(video_file)
@@ -28,7 +28,7 @@ while not cap.isOpened():
 
 pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
 
-kernel = numpy.ones((4,4),numpy.float32)/(4*4)
+kernel = numpy.ones((2,2),numpy.float32)/(2*2)
 
 while True:
     flag, frame = cap.read()
@@ -37,12 +37,12 @@ while True:
         #cv2.imshow('video', frame)
 
         dst = cv2.filter2D(numpy.asarray(frame[:, :, :]), -1, kernel)
-        dst = dst[::4, :, :][:, ::4, :]
+        #dst = dst[::4, :, :][:, ::4, :]
         #plt.subplot(121), plt.imshow(numpy.asarray(frame[:, :, :])), plt.title('Original')
         #plt.subplot(122), plt.imshow(dst), plt.title('Averaging')
         #plt.show(block=False)
 
-        movie_frames[pos_frame, :] = numpy.asarray(dst).reshape([n_pixels/16])
+        movie_frames[pos_frame, :] = numpy.asarray(dst).reshape([n_pixels])
         pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
         print(str(pos_frame)+" frames")
     else:
@@ -64,14 +64,14 @@ while True:
 #numpy.savetxt(sim_dir + '/' + 'movie_mat.txt', movie_frames, delimiter=',')
 #movie_frames = numpy.loadtxt(sim_dir + '/' + 'movie_mat.txt', delimiter=',')
 
-n_pca = 4000
-pca = PCA(n_components=6, whiten=False)
+n_pca = 7000
+pca = PCA(n_components=3, whiten=False)
 pca.fit(movie_frames[0:n_pca, :])
 pca_base = pca.components_
 explained_variance = pca.explained_variance_
 
 plt.plot(explained_variance)
-plt.show()
+plt.show(block=False)
 
 numpy.savetxt(sim_dir + '/' + 'pca_vects.txt', pca_base, delimiter=',')
 pca_base = numpy.loadtxt(sim_dir + '/' + 'pca_vects.txt', delimiter=',')
