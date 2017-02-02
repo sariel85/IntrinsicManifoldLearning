@@ -370,7 +370,7 @@ class non_local_tangent_net(object):
         ax.set_title("Cost vs Epochs - Stage I")
 
 
-        learning_rate = theano.shared(1e-1)
+        learning_rate = theano.shared(1.)
         momentum = theano.shared(0.7)
         cost, cost_int = self.get_cost(self.input_base_Theano, self.input_step_Theano, self.input_coeff_Theano)
         updates = self.gradient_updates_momentum_int(cost_int, params2, learning_rate, momentum)
