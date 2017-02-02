@@ -5,18 +5,18 @@ from Util import *
 import numpy
 from non_local_tangent import non_local_tangent_net
 ###Settings#############################################################################################################
-sim_dir_name = "Non Convex" #Which dataset to run
+sim_dir_name = "2D Unit Circle" #Which dataset to run
 
-n_points_used_for_dynamics = 500 #How many points are available from which to infer dynamics
-n_points_used_for_plotting_dynamics = 500
-n_points_used_for_clusters = 500 #How many cluster to use in Kernal method
-n_points_used_for_clusters_2 = 500 #How many cluster to use in Kernal method
+n_points_used_for_dynamics = 400 #How many points are available from which to infer dynamics
+n_points_used_for_plotting_dynamics = 400
+n_points_used_for_clusters = 400 #How many cluster to use in Kernal method
+n_points_used_for_clusters_2 = 400 #How many cluster to use in Kernal method
 
-n_neighbors_cov = 20 #How neighboors to use from which to infer dynamics locally
-n_neighbors_mds = 20 #How many short distances are kept for each cluster point
+n_neighbors_cov = 10 #How neighboors to use from which to infer dynamics locally
+n_neighbors_mds = 10 #How many short distances are kept for each cluster point
 n_hidden_drift = 4 #How many nodes in hidden layer that learns intrinsic dynamics
-n_hidden_tangent = 15 #How many nodes in hidden layer that learns tangent plane
-n_hidden_int = 15 #How many nodes in hidden layer that learns intrinsic dynamics
+n_hidden_tangent = 30 #How many nodes in hidden layer that learns tangent plane
+n_hidden_int = 10 #How many nodes in hidden layer that learns intrinsic dynamics
 ########################################################################################################################
 
 sim_dir = './' + sim_dir_name
@@ -34,6 +34,7 @@ measurement_variance = numpy.load(sim_dir + '/' + 'measurement_variance.npy').as
 
 intrinsic_process_base = intrinsic_process_base[:, :noisy_sensor_base.shape[1]]
 intrinsic_process_step = intrinsic_process_step[:, :noisy_sensor_step.shape[1]]
+
 
 #ts = time.time()
 #ts = round(ts)
@@ -74,7 +75,7 @@ print_dynamics(intrinsic_process_base, intrinsic_process_step, indexs=points_dyn
 
 
 ###Intrinsic Metric Learning Net########################################################################################
-non_local_tangent_net_instance = non_local_tangent_net(intrinsic_process_base, dim_measurements=dim_measurement, dim_intrinsic=dim_intrinsic, n_hidden_drift=n_hidden_drift, n_hidden_tangent=n_hidden_tangent,  n_hidden_int=n_hidden_int, intrinsic_variance=intrinsic_variance, measurement_variance=measurement_variance)
+non_local_tangent_net_instance = non_local_tangent_net(intrinsic_process_base, dim_measurements=dim_measurement, dim_intrinsic=dim_intrinsic, n_hidden_tangent=n_hidden_tangent,  n_hidden_int=n_hidden_int, intrinsic_variance=intrinsic_variance, measurement_variance=measurement_variance)
 non_local_tangent_net_instance.train_net(noisy_sensor_base, noisy_sensor_step)
 ########################################################################################################################
 
@@ -96,11 +97,11 @@ color_map_clusters = color_map[n_points_used_for_clusters_indexs, :]
 
 metric_list_net_tangent, metric_list_net_intrinsic = get_metrics_from_net(non_local_tangent_net_instance, noisy_sensor_clusters)
 
-net_drift = get_drift_from_net(non_local_tangent_net_instance, noisy_sensor_clusters)
+#net_drift = get_drift_from_net(non_local_tangent_net_instance, noisy_sensor_clusters)
 
 
 
-print_drift(noisy_sensor_clusters, net_drift, titleStr="Net Learned Drift")
+#print_drift(noisy_sensor_clusters, net_drift, titleStr="Net Learned Drift")
 
 print_metrics(noisy_sensor_clusters, metric_list_net_tangent, intrinsic_dim=dim_intrinsic, titleStr="Net Learned Tangent Space", scale=intrinsic_variance, space_mode=True)
 
@@ -134,8 +135,8 @@ dist_mat_measured_geo = scipy.sparse.csgraph.shortest_path(dist_mat_measured_tri
 
 
 #dist_mat_net_tangent_trimmed = trim_distances(dist_mat_net_tangent, dist_mat_local_full, n_neighbors=n_neighbors_mds)
-dist_mat_net_intrinsic_trimmed = trim_distances(dist_mat_net_intrinsic, dist_mat_local_full, n_neighbors=n_neighbors_mds)
-dist_mat_local_trimmed = trim_distances(dist_mat_local, dist_mat_local_full, n_neighbors=n_neighbors_mds)
+dist_mat_net_intrinsic_trimmed = trim_distances(dist_mat_net_intrinsic, dist_mat_true, n_neighbors=n_neighbors_mds)
+dist_mat_local_trimmed = trim_distances(dist_mat_local, dist_mat_true, n_neighbors=n_neighbors_mds)
 dist_mat_true_trimmed = trim_distances(dist_mat_true, n_neighbors=n_neighbors_mds)
 
 
@@ -161,8 +162,11 @@ dist_mat_measured_geo = dist_mat_measured_geo[n_points_used_for_clusters_indexs_
 #dist_mat_net_tangent_geo = dist_mat_net_tangent_geo[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 dist_mat_net_intrinsic_geo = dist_mat_net_intrinsic_geo[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 
-dist_mat_local_trimmed = trim_distances(dist_mat_local_geo, dist_mat_local_full, n_neighbors=n_neighbors_mds)
-dist_mat_net_intrinsic_trimmed = trim_distances(dist_mat_net_intrinsic_geo, dist_mat_local_full, n_neighbors=n_neighbors_mds)
+#dist_mat_local_trimmed = trim_distances(dist_mat_local_geo, dist_mat_local_full, n_neighbors=n_neighbors_mds)
+dist_mat_local_trimmed = dist_mat_local_trimmed[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
+#dist_mat_net_intrinsic_trimmed = trim_distances(dist_mat_net_intrinsic_geo, dist_mat_local_full, n_neighbors=n_neighbors_mds)
+dist_mat_net_intrinsic_trimmed = dist_mat_net_intrinsic_trimmed[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
+
 dist_mat_true_trimmed = trim_distances(dist_mat_true, dist_mat_true, n_neighbors=n_neighbors_mds)
 
 

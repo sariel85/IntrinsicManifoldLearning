@@ -66,9 +66,9 @@ def whole_sphere(intrinsic_process):
     theta = numpy.arctan(intrinsic_process[1, :] / intrinsic_process[0, :])
     theta[numpy.where(intrinsic_process[0, :] < 0)] = theta[numpy.where(intrinsic_process[0, :] < 0)]+numpy.pi
 
-    observed_process[0] = numpy.sin(2*radius)*numpy.sin(theta)
-    observed_process[1] = numpy.sin(2*radius)*numpy.cos(theta)
-    observed_process[2] = -numpy.cos(2*radius)
+    observed_process[0] = numpy.sin(5*radius)*numpy.sin(theta)
+    observed_process[1] = numpy.sin(5*radius)*numpy.cos(theta)
+    observed_process[2] = numpy.cos(5*radius)
     return observed_process
 
 
