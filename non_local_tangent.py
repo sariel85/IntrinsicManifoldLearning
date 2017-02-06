@@ -192,19 +192,20 @@ class non_local_tangent_net(object):
 
     def get_cost(self, inputs_base, inputs_step, coeffs):
         jacobian = self.get_jacobian(inputs_base.T)
-        jacobian_int = self.get_jacobian_int(inputs_base.T)
+        #jacobian_int = self.get_jacobian_int(inputs_base.T)
 
         jacobian_squared = T.batched_dot(jacobian, jacobian.dimshuffle((0, 2, 1)))
-        jacobian_int_squared = T.batched_dot(jacobian_int, jacobian_int.dimshuffle((0, 2, 1)))
+        #jacobian_int_squared = T.batched_dot(jacobian_int, jacobian_int.dimshuffle((0, 2, 1)))
 
         det_jacobian_squared = T.abs_(jacobian_squared[:,0, 0] * jacobian_squared[:,1, 1] - jacobian_squared[:,0, 1] * jacobian_squared[:,1, 0])
-        det_jacobian_int_squared = T.abs_(jacobian_int_squared[:,0, 0] * jacobian_int_squared[:,1, 1] - jacobian_int_squared[:, 0, 1] * jacobian_int_squared[:, 1, 0])
+        #det_jacobian_int_squared = T.abs_(jacobian_int_squared[:,0, 0] * jacobian_int_squared[:,1, 1] - jacobian_int_squared[:, 0, 1] * jacobian_int_squared[:, 1, 0])
 
-        cost = (T.sum((T.batched_dot(jacobian, coeffs) - (inputs_step-inputs_base)) ** 2, 1)/self.measurement_variance).mean()
+        cost = T.sum((T.batched_dot(jacobian, coeffs) - (inputs_step - inputs_base)) ** 2, 1) / self.measurement_variance+(T.log(det_jacobian_squared)-T.sum(coeffs ** 2, 1)/self.intrinsic_variance).mean()
+        #cost = (T.sum((T.batched_dot(jacobian, coeffs) - (inputs_step-inputs_base)) ** 2, 1)/self.measurement_variance).mean()
 
-        cost_int = (T.log(det_jacobian_squared)-T.log(det_jacobian_int_squared)+T.sum(T.batched_dot(jacobian_int, coeffs) ** 2, 1)/self.intrinsic_variance).mean()
+        #cost_int = (T.log(det_jacobian_squared)-T.log(det_jacobian_int_squared)+T.sum(T.batched_dot(jacobian_int, coeffs) ** 2, 1)/self.intrinsic_variance).mean()
 
-        return cost, cost_int
+        return cost
 
 
     def gradient_updates_momentum(self, cost, params, learning_rate, momentum):
@@ -270,7 +271,7 @@ class non_local_tangent_net(object):
         #lr_t = learning_rate * (1/ fix1_fact)
         lr_t = learning_rate
         for p, g in zip(params, grads):
-            g = T.clip(g, -20, 20)
+            g = T.clip(g, -5, 5)
             m = theano.shared(p.get_value() * 0.)
             v = theano.shared(p.get_value() * 0.)
             m_t = (b1 * g) + ((1. - b1) * m)
@@ -290,8 +291,8 @@ class non_local_tangent_net(object):
         return updates
 
     def train_net(self, noisy_sensor_base, noisy_sensor_step):
-        max_epoch_tangent = 1000
-        max_epoch_int = 2000
+        max_epoch_tangent = 500
+        max_epoch_int = 1000
 
         n_points = noisy_sensor_base.shape[1]
 
