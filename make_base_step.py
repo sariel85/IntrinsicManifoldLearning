@@ -4,43 +4,72 @@ from __future__ import print_function
 from __future__ import absolute_import
 from DataGeneration import print_process, create_color_map
 import numpy
-sim_dir_name = "2D Non Convex"
+
+sim_dir_name = "2D Room - Non Convex"
+process_mode = "Static"
 
 #sim_dir_name = "2D Room - Exact Limits - More Points - No Override"
 intrinsic_process_file_name = 'intrinsic_process.npy'
-sim_dir = './' + sim_dir_name
 
+sim_dir = './' + sim_dir_name
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
 
-n_points_used = 50000
+intrinsic_simulated_process = numpy.load(sim_dir + '/' + intrinsic_process_file_name).T
+intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=numpy.float64)
 
-intrinsic_simulated_process = numpy.load(sim_dir + '/' + intrinsic_process_file_name)
+n_points_used = 100
 
 n_points = intrinsic_simulated_process.shape[1]
 
-n_points_used = min(n_points-1, n_points_used)
+if process_mode == "Static":
+    n_points_used = min(n_points, n_points_used)
+    points_used_index = numpy.random.choice(intrinsic_simulated_process.shape[1], size=n_points_used, replace=False)
 
-points_used_index = numpy.random.choice(intrinsic_simulated_process.shape[1]-1, size=n_points_used, replace=False)
+else:
+    n_points_used = min(n_points - 1, n_points_used)
+    points_used_index = numpy.random.choice(intrinsic_simulated_process.shape[1]-1, size=n_points_used, replace=False)
 
-intrinsic_process_base = intrinsic_simulated_process[:, points_used_index]
-intrinsic_process_step = intrinsic_simulated_process[:, points_used_index+1]
+intrinsic_points_to_use = intrinsic_simulated_process[:, points_used_index]
 
-numpy.savetxt(sim_dir + '/' + 'intrinsic_base.txt', intrinsic_process_base.T, delimiter=',')
-numpy.savetxt(sim_dir + '/' + 'intrinsic_step.txt', intrinsic_process_step.T, delimiter=',')
+dim_intrinsic = intrinsic_simulated_process.shape[0]
 
+if process_mode == "Static":
 
-print_process(intrinsic_process_base, titleStr="Intrinsic Base Process")
-print_process(intrinsic_process_step, titleStr="Intrinsic Step Process")
-'''
-intrinsic_process_base_2 = intrinsic_simulated_process[:, points_used_index[50000:]]
-intrinsic_process_step_2 = intrinsic_simulated_process[:, points_used_index[50000:]+1]
+    intrinsic_process_to_measure = numpy.zeros((dim_intrinsic, n_points_used*(dim_intrinsic+1)))
 
-numpy.savetxt(sim_dir + '/' + 'intrinsic_base_2.txt', intrinsic_process_base_2.T, delimiter=',')
-numpy.savetxt(sim_dir + '/' + 'intrinsic_step_2.txt', intrinsic_process_step_2.T, delimiter=',')
+    intrinsic_process_to_measure = intrinsic_process_to_measure.T
+    intrinsic_points_to_use = intrinsic_points_to_use.T
 
-print_process(intrinsic_process_base, titleStr="Intrinsic Base Process")
-print_process(intrinsic_process_step, titleStr="Intrinsic Step Process")
-'''
+    for i_point in range(n_points_used):
+        intrinsic_process_to_measure[i_point*(dim_intrinsic+1)+0, :] = intrinsic_points_to_use[i_point, :]
+        for i_dim in range(dim_intrinsic):
+            intrinsic_process_to_measure[i_point * (dim_intrinsic + 1) + i_dim + 1, :] = intrinsic_points_to_use[i_point, :]
+            intrinsic_process_to_measure[i_point * (dim_intrinsic + 1) + i_dim + 1, i_dim] = intrinsic_process_to_measure[i_point * (dim_intrinsic + 1) + i_dim + 1, i_dim] + numpy.sqrt(intrinsic_variance)
 
+    intrinsic_process_to_measure = intrinsic_process_to_measure.T
+    intrinsic_points_to_use = intrinsic_points_to_use.T
 
+    print_process(intrinsic_process_to_measure, titleStr="Intrinsic Process to Measure")
 
+else:
+
+    intrinsic_process_base = intrinsic_simulated_process[:, points_used_index]
+    intrinsic_process_step = intrinsic_simulated_process[:, points_used_index+1]
+
+    intrinsic_process_to_measure = numpy.zeros((dim_intrinsic, 2*n_points_used))
+
+    intrinsic_process_to_measure = intrinsic_process_to_measure.T
+    intrinsic_process_base = intrinsic_process_base.T
+    intrinsic_process_step = intrinsic_process_step.T
+    for i_point in range(n_points_used):
+        intrinsic_process_to_measure[i_point*2 + 0, :] = intrinsic_process_base[i_point, :]
+        intrinsic_process_to_measure[i_point*2 + 1, :] = intrinsic_process_step[i_point, :]
+    intrinsic_process_to_measure = intrinsic_process_to_measure.T
+    intrinsic_process_base = intrinsic_process_base.T
+    intrinsic_process_step = intrinsic_process_step.T
+
+    print_process(intrinsic_process_base, titleStr="Intrinsic Base Process")
+    print_process(intrinsic_process_step, titleStr="Intrinsic Step Process")
+
+numpy.savetxt(sim_dir + '/' + 'intrinsic_used.txt', intrinsic_points_to_use.T, delimiter=',')
+numpy.savetxt(sim_dir + '/' + 'intrinsic_process_to_measure.txt', intrinsic_process_to_measure.T, delimiter=',')

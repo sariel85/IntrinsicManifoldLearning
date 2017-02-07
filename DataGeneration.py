@@ -1,6 +1,6 @@
 import numpy
 import math
-from shapely.geometry import Polygon as PolygonShapely, Point
+from shapely.geometry import Polygon as PolygonShapely, Point, LinearRing
 #import polyhedron
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -112,7 +112,7 @@ def print_process(input_process, indexs=None, bounding_shape=None, color_map=Non
 
         if ax is None:
             fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
+            ax = fig.add_subplot(111, projection='3d', aspect='equal')
         else:
             ax.cla()
 
@@ -137,7 +137,6 @@ def print_process(input_process, indexs=None, bounding_shape=None, color_map=Non
         plt.title(titleStr)
         plt.show(block=False)
         return ax
-
     else:
         return None
 
@@ -191,7 +190,7 @@ def print_drift(process, drift,  indexs=None, bounding_shape=None, color_map=Non
 
         if ax is None:
             fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
+            ax = fig.add_subplot(111, projection='3d', aspect='equal')
         else:
             ax.cla()
 
@@ -259,7 +258,7 @@ def print_dynamics(process_base, process_step,  indexs=None, bounding_shape=None
 
         if ax is None:
             fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
+            ax = fig.add_subplot(111, projection='3d', aspect='equal')
         else:
             ax.cla()
 
@@ -290,8 +289,18 @@ def print_dynamics(process_base, process_step,  indexs=None, bounding_shape=None
 
 
 
-def bounding_potential(point, bounding_shape):
-    d = bounding_shape.dist_from_point(point)
+def bounding_potential(point, bounding_shape, added_dim_limits):
+    d_shape = bounding_shape.dist_from_point(point)
+
+    if added_dim_limits is not None:
+        added_cords = (numpy.random.rand(added_dim_limits.shape[1]) - added_dim_limits[0, :]) * (
+        added_dim_limits[1, :] - added_dim_limits[0, :])
+        d_added = numpy.min([added_cords - added_dim_limits[0, :], added_dim_limits[1, :] - added_cords])
+    else:
+        d_added = numpy.inf
+
+    d = min(d_shape, d_added)
+
     if d <= 0:
         potential = 0
     else:
@@ -442,72 +451,207 @@ class BoundingShape(object):
 
 
 class ItoGenerator(object):
-    def __init__(self, bounding_shape, intrinsic_potential, dim_intrinsic):
+    def __init__(self, bounding_shape, added_dim_limits):
+
+
+        self.bounding_shape = bounding_shape
+        def intrinsic_potential(point): return bounding_potential(point, bounding_shape=bounding_shape, added_dim_limits=added_dim_limits)
+        self.intrinsic_potential = intrinsic_potential
+
+        if added_dim_limits is not None:
+            self.dim_intrinsic = bounding_shape.dim + added_dim_limits.shape[1]
+        else:
+            self.dim_intrinsic = bounding_shape.dim
+
+        '''
         if bounding_shape is None:
             self.intrinsic_potential = intrinsic_potential
             self.dim_intrinsic = dim_intrinsic
             self.bounding_shape = None
         else:
             self.bounding_shape = bounding_shape
-            def intrinsic_potential(point): return bounding_potential(point, bounding_shape=bounding_shape)
+            def intrinsic_potential(point): return bounding_potential(point, bounding_shape=bounding_shape, added_dim_limits=added_dim_limits)
             self.intrinsic_potential = intrinsic_potential
             self.dim_intrinsic = dim_intrinsic
+        '''
 
-    def gen_process(self, n_trajectory_points=1000, process_var=1, subsample_factor=10):
+    def gen_process(self, n_trajectory_points, process_var, process_mode, added_dim_limits, subsample_factor=10):
 
         toolbar_width = 100
 
-        # setup toolbar
-        n_simulation_points = n_trajectory_points * subsample_factor
-        milestones = numpy.arange(0, n_simulation_points, n_simulation_points/toolbar_width, dtype=numpy.float32)
-        milestones = numpy.round(milestones)
-        milestones2 = milestones
-        milestones2[0:-1] = milestones[1:]
-        milestones2[-1] = n_simulation_points
-        sim_var = process_var/subsample_factor
-        process = numpy.empty([self.dim_intrinsic, n_simulation_points], dtype=numpy.float32)
-        process[:] = numpy.NAN
-
-        point_start = numpy.empty((self.dim_intrinsic, 1))
-        point_start[:, 0] = numpy.NAN
-
-
+        '''
         if self.bounding_shape is None:
             point_start = 0*numpy.ones([1, self.dim_intrinsic])
         else:
+        '''
+
+        if process_mode=='Dynamic':
+
+            # setup toolbar
+            n_simulation_points = n_trajectory_points * subsample_factor
+            milestones = numpy.arange(0, n_simulation_points, n_simulation_points / toolbar_width, dtype=numpy.float64)
+            milestones = numpy.round(milestones)
+            milestones2 = milestones
+            milestones2[0:-1] = milestones[1:]
+            milestones2[-1] = n_simulation_points
+            process = numpy.empty([self.dim_intrinsic, n_simulation_points], dtype=numpy.float64)
+            dist_potential = numpy.empty([n_simulation_points], dtype=numpy.float64)
+            dist_potential[:] = numpy.NAN
+            process[:] = numpy.NAN
+
+            point_start = numpy.empty((self.dim_intrinsic, 1))
+            point_start[:, 0] = numpy.NAN
+
+            poly = PolygonShapely(self.bounding_shape.vertices)
+            pol_ext = LinearRing(poly.exterior.coords)
+
+
+            sim_var = process_var / subsample_factor
+
             # Find bounding box of bounding shape
             [box_origin, box_width] = self.bounding_shape.bounding_box()
-            good_start_flag = False
+            in_bounds_flag = False
             # Randomly select point with in the bounding shape
-            while not (good_start_flag):
-                point_start = box_origin + numpy.multiply(box_width, numpy.random.rand(self.dim_intrinsic, 1))
-                if self.bounding_shape.contains(point_start):
-                    good_start_flag = True
 
-        # Save selected starting point and generate the rest of the process
+            if (added_dim_limits==None):
+                while not (in_bounds_flag):
+                    point_start = box_origin + numpy.multiply(box_width, numpy.random.rand(self.dim_intrinsic, 1))
+                    if self.bounding_shape.contains(point_start):
+                        in_bounds_flag = True
+            else:
+                while not (in_bounds_flag):
+                    point_start = box_origin + numpy.multiply(box_width, numpy.random.rand(self.dim_intrinsic, 1))
+                    if self.bounding_shape.contains(point_start):
+                        in_bounds_flag = True
 
-        process[:, 0] = point_start[:, 0]
-        #process[:, 0] = np.asarray([[0], [0], [5]]).reshape(3)
+                if (added_dim_limits != None):
+                    added_cord = numpy.random.rand(self.dim_intrinsic, added_dim_limits)
+                    point_start = point_start, added_cord
 
-        i_prog = 0
+            # Save selected starting point and generate the rest of the process
 
-        for i_point in range(1, n_simulation_points):
+            process[:, 0] = point_start[:, 0]
+            dist_potential[0] = numpy.inf
 
-            if i_point > milestones[i_prog]:
-                # update the bar
-                #sys.stdout.write("%s \n" % ("-"*i_prog))
-                printProgress(i_prog, toolbar_width, prefix='Progress:', suffix='Complete', barLength=50)
-                i_prog = i_prog+1
 
-            num_grad = compute_numerical_gradient(self.intrinsic_potential, point=process[:, i_point-1])
-            temp = process[:, i_point-1].reshape(self.dim_intrinsic, 1) - num_grad + math.sqrt(sim_var) * numpy.random.randn(self.dim_intrinsic, 1)
-            #temp = process[:, 0].reshape(dim_process, 1) - num_grad + math.sqrt(sim_var) * numpy.random.randn(
-            #    dim_process, 1)
-            process[:, i_point] = temp[:, 0]
+            # Used to track progress
+            i_prog = 0
+
+            for i_point in range(1, n_simulation_points):
+
+                if i_point > milestones[i_prog]:
+                    # update the bar
+                    #sys.stdout.write("%s \n" % ("-"*i_prog))
+                    printProgress(i_prog, toolbar_width, prefix='Progress:', suffix='Complete', barLength=50)
+                    i_prog = i_prog+1
+
+                num_grad = compute_numerical_gradient(self.intrinsic_potential, point=process[:, i_point-1])
+
+                test_point = process[:, i_point-1].reshape(self.dim_intrinsic, 1) - num_grad + math.sqrt(sim_var) * numpy.random.randn(self.dim_intrinsic, 1)
+                #temp = process[:, 0].reshape(dim_process, 1) - num_grad + math.sqrt(sim_var) * numpy.random.randn(
+                #    dim_process, 1)
+                test_point = test_point[:, 0]
+
+                if added_dim_limits is not None:
+                    added_cords = (numpy.random.rand(added_dim_limits.shape[1]) - added_dim_limits[0, :])*(added_dim_limits[1, :] - added_dim_limits[0, :])
+                    test_point = numpy.append(test_point, added_cords)
+                    d_added = numpy.min([added_cords - added_dim_limits[0, :], added_dim_limits[1, :] - added_cords])
+                else:
+                    d_added = numpy.inf
+
+                # Add point
+                process[:, i_point] = test_point.reshape((self.dim_intrinsic,))
+
+                test_point_low = test_point[:self.bounding_shape.dim]
+                #d_shape = self.bounding_shape.dist_from_point(test_point)
+
+                point = Point(test_point_low.reshape((self.bounding_shape.dim,)))
+
+                d = pol_ext.project(point)
+                p = pol_ext.interpolate(d)
+                closest_point_coords = numpy.asarray(list(p.coords)[0])
+
+                d_shape = numpy.linalg.norm(closest_point_coords-test_point[:self.bounding_shape.dim].T)
+
+                dist_potential[i_point] = min(d_shape, d_added)
+
+                if (numpy.linalg.norm(num_grad)>0):
+                    dist_potential[i_point-1] = -dist_potential[i_point-1]
+
+        elif process_mode == 'Static':
+
+            subsample_factor = 1
+
+            # setup toolbar
+            n_simulation_points = n_trajectory_points * subsample_factor
+            milestones = numpy.arange(0, n_simulation_points, n_simulation_points / toolbar_width, dtype=numpy.float64)
+            milestones = numpy.round(milestones)
+            milestones2 = milestones
+            milestones2[0:-1] = milestones[1:]
+            milestones2[-1] = n_simulation_points
+            process = numpy.empty([self.dim_intrinsic, n_simulation_points], dtype=numpy.float64)
+            process[:] = numpy.NAN
+            dist_potential = numpy.empty([n_simulation_points], dtype=numpy.float64)
+            dist_potential[:] = numpy.NAN
+
+
+            point_start = numpy.empty((self.dim_intrinsic, 1))
+            point_start[:, 0] = numpy.NAN
+
+            poly = PolygonShapely(self.bounding_shape.vertices)
+            pol_ext = LinearRing(poly.exterior.coords)
+
+            # Find bounding box of bounding shape
+            [box_origin, box_width] = self.bounding_shape.bounding_box()
+
+            # Used to track progress
+            i_prog = 0
+
+            for i_point in range(0, n_simulation_points):
+
+                in_bounds_flag = False
+
+                # Randomly select point within the bounding shape
+                while not (in_bounds_flag):
+                    test_point = box_origin + numpy.multiply(box_width, numpy.random.rand(self.bounding_shape.dim, 1))
+                    if self.bounding_shape.contains(test_point):
+                        in_bounds_flag = True
+                test_point_low = numpy.asarray(test_point)
+
+                if added_dim_limits is not None:
+                    added_cords = (numpy.random.rand(added_dim_limits.shape[1]) - added_dim_limits[0, :])*(added_dim_limits[1, :] - added_dim_limits[0, :])
+                    test_point = numpy.append(test_point, added_cords)
+                    d_added = numpy.min([added_cords - added_dim_limits[0, :], added_dim_limits[1, :] - added_cords])
+                else:
+                    d_added = numpy.inf
+
+                # Add point
+                process[:, i_point] = test_point.reshape((self.dim_intrinsic,))
+
+                #d_shape = self.bounding_shape.dist_from_point(test_point)
+
+                point = Point(test_point_low.reshape((self.bounding_shape.dim,)))
+
+                d = pol_ext.project(point)
+                p = pol_ext.interpolate(d)
+                closest_point_coords = numpy.asarray(list(p.coords)[0])
+
+                d_shape = numpy.linalg.norm(closest_point_coords-test_point[:self.bounding_shape.dim].T)
+                dist_potential[i_point] = min(d_shape, d_added)
+
+
+                if i_point > milestones[i_prog]:
+                    # update the bar
+                    # sys.stdout.write("%s \n" % ("-"*i_prog))
+                    printProgress(i_prog, toolbar_width, prefix='Progress:', suffix='Complete', barLength=50)
+                    i_prog = i_prog + 1
+
+        else:
+            assert("Intrinsic Process is Neither Static or Dynamic")
 
         printProgress(toolbar_width, toolbar_width, prefix='Progress:', suffix='Complete', barLength=50)
 
-        return numpy.asarray(process[:, 0::subsample_factor], dtype=numpy.float32)
+        return numpy.asarray(process[:, 0::subsample_factor], dtype=numpy.float64), dist_potential[0::subsample_factor]
 
 def printProgress(iteration, total, prefix='', suffix='', decimals=1, barLength=100):
     """

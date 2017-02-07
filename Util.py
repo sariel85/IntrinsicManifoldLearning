@@ -232,6 +232,30 @@ def get_metrics_from_points(cluster_centers, input_base, input_step, n_neighbors
 
     return cov_list_def, cov_list_full
 
+def get_metrics_from_points_static(noisy_sensor_measured, dim_intrinsic, intrinsic_variance):
+
+
+    cov_list_def = [None] * n_cluster_points
+    cov_list_full = [None] * n_cluster_points
+
+    for x in range(0, knn_indexes.shape[0]):
+        temp_cov = numpy.cov(diff_clusters[:, x, :])
+        U, s, V = numpy.linalg.svd(temp_cov)
+        s_full = numpy.copy(s)
+        s_def = numpy.copy(s)
+        s_def[dim_intrinsic:] = float('Inf')
+        s_def = 1 / s_def
+        #if s_def[dim_intrinsic:] < numpy.finfo(numpy.float32).eps:
+        #    s_full[dim_intrinsic:] = numpy.finfo(numpy.float32).eps
+
+        s_full = 1 / s_full
+        cov_list_def[x] = intrinsic_variance*numpy.dot(U, numpy.dot(numpy.diag(s_def), V))
+        cov_list_full[x] = intrinsic_variance*numpy.dot(U, numpy.dot(numpy.diag(s_full), V))
+
+
+    return cov_list_def, cov_list_full
+
+
 
 def get_metrics_from_net(non_local_tangent_net, noisy_sensor_clusters):
     dim_measurement = noisy_sensor_clusters.shape[0]

@@ -5,7 +5,8 @@ from Util import *
 import numpy
 from non_local_tangent import non_local_tangent_net
 ###Settings#############################################################################################################
-sim_dir_name = "2D Room - Exact Limits" #Which dataset to run
+sim_dir_name = "2D Room - Non Convex" #Which dataset to run
+process_mode = "Static"
 
 n_points_used_for_dynamics = 10000 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 300
@@ -22,18 +23,18 @@ n_hidden_int = 20 #How many nodes in hidden layer that learns intrinsic dynamics
 sim_dir = './' + sim_dir_name
 dtype = numpy.float64
 
-intrinsic_process_base = numpy.loadtxt(sim_dir + '/' + 'intrinsic_base.txt', delimiter=',', dtype=dtype).T
-intrinsic_process_step = numpy.loadtxt(sim_dir + '/' + 'intrinsic_step.txt', delimiter=',', dtype=dtype).T
-noisy_sensor_base = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy_base.txt', delimiter=',', dtype=dtype)
-noisy_sensor_step = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy_step.txt', delimiter=',', dtype=dtype)
-noisy_sensor_base_mean = noisy_sensor_base.mean()
-noisy_sensor_base = (noisy_sensor_base - noisy_sensor_base_mean)
-noisy_sensor_step = (noisy_sensor_step - noisy_sensor_base_mean)
+intrinsic_process = numpy.loadtxt(sim_dir + '/' + 'intrinsic_used.txt', delimiter=',', dtype=dtype).T
+noisy_sensor_measured = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy.txt', delimiter=',', dtype=dtype).T
 intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=dtype)
 measurement_variance = numpy.load(sim_dir + '/' + 'measurement_variance.npy').astype(dtype=dtype)
 
-intrinsic_process_base = intrinsic_process_base[:, :noisy_sensor_base.shape[1]]
-intrinsic_process_step = intrinsic_process_step[:, :noisy_sensor_step.shape[1]]
+dim_intrinsic = intrinsic_process.shape[0]
+dim_measurement = noisy_sensor_measured.shape[0]
+n_points = intrinsic_process.shape[1]
+
+
+if process_mode=="Static":
+    noisy_sensor = noisy_sensor_measured[:, ::(dim_intrinsic+1)]
 
 #measurement_variance = 0.000001
 
@@ -44,29 +45,41 @@ intrinsic_process_step = intrinsic_process_step[:, :noisy_sensor_step.shape[1]]
 #full_dir_name = './' + 'Runs' + '/' + sim_dir_name + dir_name
 #os.makedirs(full_dir_name)
 
-dim_intrinsic = intrinsic_process_base.shape[0]
-dim_measurement = noisy_sensor_base.shape[0]
-n_points = intrinsic_process_base.shape[1]
+noisy_sensor_mean = noisy_sensor.mean()
+noisy_sensor = (noisy_sensor - noisy_sensor_mean)
 
 n_points_used_for_dynamics = min(n_points, n_points_used_for_dynamics)
 points_used_dynamics_index = numpy.random.choice(n_points, size=n_points_used_for_dynamics, replace=False)
 
-intrinsic_process_base = intrinsic_process_base[:, points_used_dynamics_index]
-intrinsic_process_step = intrinsic_process_step[:, points_used_dynamics_index]
-noisy_sensor_base = noisy_sensor_base[:, points_used_dynamics_index]
-noisy_sensor_step = noisy_sensor_step[:, points_used_dynamics_index]
+intrinsic_process = intrinsic_process[:, points_used_dynamics_index]
+noisy_sensor = noisy_sensor[:, points_used_dynamics_index]
 
-n_points = intrinsic_process_base.shape[1]
+if process_mode=="Static":
+    noisy_sensor_measured = noisy_sensor_measured.T
+    noisy_sensor_measured_new = numpy.zeros(noisy_sensor_measured.shape)
+    for i_index in range(points_used_dynamics_index.shape[0]):
+        noisy_sensor_measured_new[i_index*(dim_intrinsic+1):(i_index+1)*(dim_intrinsic+1), :] = noisy_sensor_measured[points_used_dynamics_index[i_index]*(dim_intrinsic+1):(points_used_dynamics_index[i_index]+1)*(dim_intrinsic+1),:]
+    noisy_sensor_measured = noisy_sensor_measured_new.T
+
+else:
+    noisy_sensor_measured = noisy_sensor_measured.T
+    noisy_sensor_measured_new = numpy.zeros(noisy_sensor_measured.shape)
+    for i_index in range(points_used_dynamics_index.shape[0]):
+        noisy_sensor_measured_new[i_index * (2):(i_index + 1) * (2),:] = noisy_sensor_measured[points_used_dynamics_index[i_index] * (2):(points_used_dynamics_index[i_index] + 1) * (2), :]
+    noisy_sensor_measured = noisy_sensor_measured_new.T
+
+
+n_points = intrinsic_process.shape[1]
 
 n_points_used_for_plotting_dynamics = min(n_points, n_points_used_for_plotting_dynamics)
 points_dynamics_plot_index = numpy.random.choice(n_points, size=n_points_used_for_plotting_dynamics, replace=False)
 
-color_map = create_color_map(intrinsic_process_base)
+color_map = create_color_map(intrinsic_process)
 
-print_process(intrinsic_process_base, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Intrinsic Space")
+print_process(intrinsic_process, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Intrinsic Space")
 #plt.savefig(full_dir_name + '/' + 'intrinsic_base.png', bbox_inches='tight')
 
-print_process(noisy_sensor_base, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Observed Space")
+print_process(noisy_sensor, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Observed Space")
 #plt.savefig(full_dir_name + '/' + 'sensor_base.png', bbox_inches='tight')
 
 #print_dynamics(intrinsic_process_base, intrinsic_process_step, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Intrinsic Process Dynamics")
@@ -87,10 +100,10 @@ n_points_used_for_clusters_indexs = numpy.random.choice(n_points, size=n_points_
 
 
 #Measured Points
-noisy_sensor_clusters = noisy_sensor_base[:, n_points_used_for_clusters_indexs]
+noisy_sensor_clusters = noisy_sensor[:, n_points_used_for_clusters_indexs]
 
 #Ground Truth
-intrinsic_process_clusters = intrinsic_process_base[:, n_points_used_for_clusters_indexs]
+intrinsic_process_clusters = intrinsic_process[:, n_points_used_for_clusters_indexs]
 
 n_points_used_for_clusters = intrinsic_process_clusters.shape[1]
 
@@ -109,7 +122,13 @@ color_map_clusters = color_map[n_points_used_for_clusters_indexs, :]
 
 #print_metrics(noisy_sensor_clusters, metric_list_net_intrinsic, intrinsic_dim=dim_intrinsic, titleStr="Net Learned Intrinsic Jacobians", scale=intrinsic_variance, space_mode=False)
 
-metric_list_def, metric_list_full = get_metrics_from_points(noisy_sensor_clusters, noisy_sensor_base, noisy_sensor_step, n_neighbors_cov, dim_intrinsic, intrinsic_variance)
+if process_mode=="Static":
+    metric_list_def, metric_list_full = get_metrics_from_points_static(noisy_sensor_measured, dim_intrinsic, intrinsic_variance)
+else:
+    noisy_sensor_base = noisy_sensor_measured [:, ::2]
+    noisy_sensor_step = noisy_sensor_measured [:, 1::2]
+    metric_list_def, metric_list_full = get_metrics_from_points(noisy_sensor_clusters, noisy_sensor_base, noisy_sensor_step, n_neighbors_cov, dim_intrinsic, intrinsic_variance)
+
 
 #print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Tangent Jacobians", scale=intrinsic_variance*0.1, space_mode=False)
 
