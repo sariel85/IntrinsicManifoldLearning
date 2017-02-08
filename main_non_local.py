@@ -8,10 +8,10 @@ from non_local_tangent import non_local_tangent_net
 sim_dir_name = "2D Room - Video" #Which dataset to run
 process_mode = "Static"
 
-n_points_used_for_dynamics = 500 #How many points are available from which to infer dynamics
+n_points_used_for_dynamics = 2000 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 400
-n_points_used_for_clusters = 450 #How many cluster to use in Kernal method
-n_points_used_for_clusters_2 = 400 #How many cluster to use in Kernal method
+n_points_used_for_clusters = 2000 #How many cluster to use in Kernal method
+n_points_used_for_clusters_2 = 1000 #How many cluster to use in Kernal method
 
 n_neighbors_cov = 40 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 20 #How many short distances are kept for each cluster point
@@ -212,7 +212,7 @@ dist_mat_true = dist_mat_true[points_used_for_clusters_indexs_2, :][:,points_use
 #dist_mat_net_intrinsic_geo = dist_mat_net_intrinsic_geo[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 
 dist_mat_local_trimmed = trim_distances(dist_mat_local_geo, n_neighbors=n_neighbors_mds)
-dist_mat_local_trimmed_topo = trim_distances_topo(dist_mat_local_geo, dist_potential=dist_potential_2, radius_trim=1, intrinsic_process=intrinsic_process_clusters_2)
+dist_mat_local_trimmed_topo = trim_distances_topo(trim_distances(dist_mat_local_geo, n_neighbors=n_neighbors_mds) , dist_potential=dist_potential_2, radius_trim=1, intrinsic_process=intrinsic_process_clusters_2)
 
 #dist_mat_local_trimmed = dist_mat_local_trimmed[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 #dist_mat_net_intrinsic_trimmed = trim_distances(dist_mat_net_intrinsic_geo, dist_mat_true, n_neighbors=n_neighbors_mds)
@@ -259,9 +259,9 @@ print_process(iso_embedding_local.T, bounding_shape=None, color_map=color_map_cl
 stress, stress_normlized = embbeding_score(intrinsic_process_clusters_2, iso_embedding_local.T, titleStr="Isomap with Locally Learned Intrinsic Metric", n_points=n_points_used_for_clusters_2)
 print('iso_embedding_local:', stress_normlized)
 
-print_process(iso_embedding_local_topo.T, bounding_shape=None, color_map=color_map_clusters_2, titleStr="Isomap with Locally Learned Intrinsic Metric", align_points=intrinsic_process_clusters_2)
+print_process(iso_embedding_local_topo.T, bounding_shape=None, color_map=color_map_clusters_2, titleStr="Isomap with Locally Learned Intrinsic Metric and Topo", align_points=intrinsic_process_clusters_2)
 stress, stress_normlized = embbeding_score(intrinsic_process_clusters_2, iso_embedding_local_topo.T, titleStr="Isomap with Locally Learned Intrinsic Metric and Topo", n_points=n_points_used_for_clusters_2)
-print('iso_embedding_local:', stress_normlized)
+print('iso_embedding_local_topo:', stress_normlized)
 
 print_process(iso_embedding_true_sp.T, bounding_shape=None, color_map=color_map_clusters_2, titleStr="Isomap with Exact Short Distances", align_points=intrinsic_process_clusters_2)
 stress, stress_normlized = embbeding_score(intrinsic_process_clusters_2, iso_embedding_true_sp.T, titleStr="Isomap with Exact Short Distances", n_points=n_points_used_for_clusters_2)
