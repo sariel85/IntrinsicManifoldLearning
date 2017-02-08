@@ -344,9 +344,10 @@ def trim_distances_topo(dist_mat, dist_potential, radius_trim, intrinsic_process
             elif (edge_list[1]== True) and (edge_list[-1]== True) and all(edge == False for edge in edge_list[1:-1]):
                 dist_mat_trim[i_x, i_y] = dist_mat[i_x, i_y]
 
-    fig = plt.figure()
-    ax = fig.gca()
-    ax.scatter(intrinsic_process[0, :], intrinsic_process[1, :], c="k")
+    #fig = plt.figure()
+    #plt.axis('equal')
+    #ax = fig.gca()
+    #ax.scatter(intrinsic_process[0, :], intrinsic_process[1, :], c="k")
 
     #for i_x in range(0, n_points):
     #    for i_y in range(0, n_points):
@@ -354,10 +355,13 @@ def trim_distances_topo(dist_mat, dist_potential, radius_trim, intrinsic_process
     #            ax.plot(intrinsic_process[0, [i_x,i_y]], intrinsic_process[1, [i_x,i_y]], '-', c='k')
 
 
-    for i_x in range(0, n_points):
-        for i_y in range(0, n_points):
-            if (dist_mat_trim[i_x, i_y]==0):
-                ax.plot(intrinsic_process[0, [i_x,i_y]], intrinsic_process[1, [i_x,i_y]], '-', c='k')
+    #for i_x in range(0, n_points):
+    #    for i_y in range(0, n_points):
+    #        if (dist_mat_trim[i_x, i_y]!=0):
+    #            ax.plot(intrinsic_process[0, [i_x,i_y]], intrinsic_process[1, [i_x,i_y]], '-', c='k')
+
+    ax.set_title("Kept Distances")
+    plt.axis('tight')
 
     return dist_mat_trim
 

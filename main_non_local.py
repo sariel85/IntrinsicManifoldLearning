@@ -11,7 +11,7 @@ process_mode = "Static"
 n_points_used_for_dynamics = 2000 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 400
 n_points_used_for_clusters = 1000 #How many cluster to use in Kernal method
-n_points_used_for_clusters_2 = 1000 #How many cluster to use in Kernal method
+n_points_used_for_clusters_2 = 400 #How many cluster to use in Kernal method
 
 n_neighbors_cov = 40 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 20 #How many short distances are kept for each cluster point
@@ -28,7 +28,7 @@ noisy_sensor_measured = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy.txt', delimi
 intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=dtype)
 measurement_variance = numpy.load(sim_dir + '/' + 'measurement_variance.npy').astype(dtype=dtype)
 dist_potential = numpy.loadtxt(sim_dir + '/' + 'dist_potential_used.txt', delimiter=',', dtype=dtype)
-g
+
 dim_intrinsic = intrinsic_process.shape[0]
 dim_measurement = noisy_sensor_measured.shape[0]
 n_points = intrinsic_process.shape[1]
@@ -212,7 +212,7 @@ dist_mat_true = dist_mat_true[points_used_for_clusters_indexs_2, :][:,points_use
 #dist_mat_net_intrinsic_geo = dist_mat_net_intrinsic_geo[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 
 dist_mat_local_trimmed = trim_distances(dist_mat_local_geo, n_neighbors=n_neighbors_mds)
-dist_mat_local_trimmed_topo = trim_distances_topo(trim_distances(dist_mat_local_geo, n_neighbors=n_neighbors_mds) , dist_potential=dist_potential_2, radius_trim=1, intrinsic_process=intrinsic_process_clusters_2)
+dist_mat_local_trimmed_topo = trim_distances_topo(trim_distances(dist_mat_local_geo, n_neighbors=n_neighbors_mds) , dist_potential=dist_potential_2, radius_trim=0.4, intrinsic_process=intrinsic_process_clusters_2)
 
 #dist_mat_local_trimmed = dist_mat_local_trimmed[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 #dist_mat_net_intrinsic_trimmed = trim_distances(dist_mat_net_intrinsic_geo, dist_mat_true, n_neighbors=n_neighbors_mds)
