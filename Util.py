@@ -320,12 +320,23 @@ def calc_diff_map(dist_mat, dims=2, factor=2):
     U, S, V = numpy.linalg.svd(normlized_kernal)
     return U[:, 1:dims+1]
 
-def print_metrics(noisy_sensor_clusters, metric_list, intrinsic_dim, titleStr, scale, space_mode, elipse):
+def print_metrics(noisy_sensor_clusters, metric_list_full, intrinsic_dim, titleStr, scale, space_mode, elipse):
+    metric_list = []
+    n_metrics_to_print = 100
 
+    n_points = noisy_sensor_clusters.shape[1]
+
+    n_points_used_for_clusters = min(n_points, n_metrics_to_print)
+    points_used_for_clusters_indexs = numpy.random.choice(n_points, size=n_points_used_for_clusters, replace=False)
+
+    noisy_sensor_clusters = numpy.copy(noisy_sensor_clusters[:, points_used_for_clusters_indexs])
+    for i_point in range(n_points_used_for_clusters):
+        metric_list.append(metric_list_full[points_used_for_clusters_indexs[i_point]])
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
     n_points = noisy_sensor_clusters.shape[1]
+
 
     if space_mode is True:
         for i_point in range(0, n_points):
@@ -801,10 +812,10 @@ def trim_non_euc2(dist_mat_trust, dim_intrinsic, intrinsic_process_clusters):
     dist_mat_trimmed = dist_mat_trimmed/numpy.maximum(dist_mat_trimmed_wgt, numpy.ones(dist_mat_trimmed_wgt.shape))
     return dist_mat_trimmed, dist_mat_trimmed_wgt
 
-def test_ml(X, n_neighbors, n_components, color):
-
+def test_ml(Y, X, n_neighbors, n_components, color):
 
     X = X.T
+    Y = Y.T
 
     fig = plt.figure(figsize=(15, 8))
     plt.suptitle("Manifold Learning with %i points, %i neighbors"
@@ -813,61 +824,67 @@ def test_ml(X, n_neighbors, n_components, color):
     try:
         # compatibility matplotlib < 1.0
         ax = fig.add_subplot(251, projection='3d')
-        ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=color)
-        ax.view_init(4, -72)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_zticklabels([])
+
+        #ax._axis3don = False
+        ax.scatter(Y[:, 0], Y[:, 1], Y[:, 2], c=color)
+        ax.view_init(10, 60)
+        plt.title("Observed")
     except:
         ax = fig.add_subplot(251, projection='3d')
-        plt.scatter(X[:, 0], X[:, 2], c=color)
+        plt.scatter(Y[:, 0], Y[:, 2], c=color)
 
     methods = ['standard', 'ltsa', 'hessian', 'modified']
     labels = ['LLE', 'LTSA', 'Hessian LLE', 'Modified LLE']
 
     for i, method in enumerate(methods):
-        t0 = time()
-        Y = manifold.LocallyLinearEmbedding(n_neighbors, n_components,
+        Z = manifold.LocallyLinearEmbedding(n_neighbors, n_components,
                                             eigen_solver='auto',
-                                            method=method).fit_transform(X)
-        t1 = time()
-        print("%s" % (methods[i]))
+                                            method=method).fit_transform(Y)
 
         ax = fig.add_subplot(252 + i)
-        plt.scatter(Y[:, 0], Y[:, 1], c=color)
+        plt.scatter(Z[:, 0], Z[:, 1], c=color)
         plt.title("%s" % (labels[i]))
         ax.xaxis.set_major_formatter(NullFormatter())
         ax.yaxis.set_major_formatter(NullFormatter())
         plt.axis('tight')
 
-    t0 = time()
-    Y = manifold.Isomap(n_neighbors, n_components).fit_transform(X)
-    t1 = time()
+    ax = fig.add_subplot(256)
+
+    plt.scatter(X[:, 0], X[:, 1], c=color)
+    plt.title("Intrinsic")
+    ax.xaxis.set_major_formatter(NullFormatter())
+    ax.yaxis.set_major_formatter(NullFormatter())
+    plt.axis('tight')
+
+    Z = manifold.Isomap(n_neighbors, n_components).fit_transform(Y)
     ax = fig.add_subplot(257)
-    plt.scatter(Y[:, 0], Y[:, 1], c=color)
+    plt.scatter(Z[:, 0], Z[:, 1], c=color)
     plt.title("Isomap")
     ax.xaxis.set_major_formatter(NullFormatter())
     ax.yaxis.set_major_formatter(NullFormatter())
     plt.axis('tight')
 
-    t0 = time()
     mds = manifold.MDS(n_components, max_iter=100, n_init=1)
-    Y = mds.fit_transform(X)
-    t1 = time()
+    Z = mds.fit_transform(Y)
     ax = fig.add_subplot(258)
-    plt.scatter(Y[:, 0], Y[:, 1], c=color)
+    plt.scatter(Z[:, 0], Z[:, 1], c=color)
     plt.title("MDS")
     ax.xaxis.set_major_formatter(NullFormatter())
     ax.yaxis.set_major_formatter(NullFormatter())
     plt.axis('tight')
 
-    t0 = time()
     se = manifold.SpectralEmbedding(n_components=n_components,
                                     n_neighbors=n_neighbors)
-    Y = se.fit_transform(X)
-    t1 = time()
+    Z = se.fit_transform(Y)
     ax = fig.add_subplot(259)
-    plt.scatter(Y[:, 0], Y[:, 1], c=color)
+    plt.scatter(Z[:, 0], Z[:, 1], c=color)
     plt.title("SpectralEmbedding")
     ax.xaxis.set_major_formatter(NullFormatter())
     ax.yaxis.set_major_formatter(NullFormatter())
+
     plt.axis('tight')
 
     plt.show()

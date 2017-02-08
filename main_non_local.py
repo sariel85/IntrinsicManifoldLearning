@@ -126,7 +126,7 @@ n_points_used_for_clusters = intrinsic_process_clusters.shape[1]
 
 color_map_clusters = color_map[points_used_for_clusters_indexs, :]
 
-test_ml(noisy_sensor_clusters, n_neighbors=n_neighbors_mds, n_components=dim_intrinsic, color=color_map_clusters)
+#test_ml(noisy_sensor_clusters, intrinsic_process_clusters, n_neighbors=n_neighbors_mds, n_components=dim_intrinsic, color=color_map_clusters)
 
 
 #metric_list_net_tangent, metric_list_net_intrinsic = get_metrics_from_net(non_local_tangent_net_instance, noisy_sensor_clusters)
