@@ -10,8 +10,8 @@ process_mode = "Static"
 
 n_points_used_for_dynamics = 2000 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 300
-n_points_used_for_clusters = 2000 #How many cluster to use in Kernal method
-n_points_used_for_clusters_2 = 2000 #How many cluster to use in Kernal method
+n_points_used_for_clusters = 500 #How many cluster to use in Kernal method
+n_points_used_for_clusters_2 = 500 #How many cluster to use in Kernal method
 
 n_neighbors_cov = 40 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 20 #How many short distances are kept for each cluster point
@@ -149,9 +149,9 @@ else:
     metric_list_def, metric_list_full = get_metrics_from_points(noisy_sensor_clusters, noisy_sensor_base, noisy_sensor_step, n_neighbors_cov, dim_intrinsic, intrinsic_variance, measurement_variance)
 
 
-#print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Tangent Jacobians", scale=intrinsic_variance*0.1, space_mode=False, elipse=False)
+print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Tangent Jacobians", scale=0.0005, space_mode=True, elipse=True, color_map=color_map_clusters)
 
-print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Intrinsic Jacobians", scale=intrinsic_variance, space_mode=False, elipse=True)
+print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Intrinsic Jacobians", scale=intrinsic_variance, space_mode=False, elipse=True, color_map=color_map_clusters)
 
 #plt.show(block=True)
 

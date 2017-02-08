@@ -320,9 +320,9 @@ def calc_diff_map(dist_mat, dims=2, factor=2):
     U, S, V = numpy.linalg.svd(normlized_kernal)
     return U[:, 1:dims+1]
 
-def print_metrics(noisy_sensor_clusters, metric_list_full, intrinsic_dim, titleStr, scale, space_mode, elipse):
+def print_metrics(noisy_sensor_clusters, metric_list_full, intrinsic_dim, titleStr, scale, space_mode, elipse, color_map):
     metric_list = []
-    n_metrics_to_print = 100
+    n_metrics_to_print = 200
 
     n_points = noisy_sensor_clusters.shape[1]
 
@@ -332,6 +332,8 @@ def print_metrics(noisy_sensor_clusters, metric_list_full, intrinsic_dim, titleS
     noisy_sensor_clusters = numpy.copy(noisy_sensor_clusters[:, points_used_for_clusters_indexs])
     for i_point in range(n_points_used_for_clusters):
         metric_list.append(metric_list_full[points_used_for_clusters_indexs[i_point]])
+
+    color_map = color_map[points_used_for_clusters_indexs, :]
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
@@ -345,21 +347,17 @@ def print_metrics(noisy_sensor_clusters, metric_list_full, intrinsic_dim, titleS
 
             if elipse:
                 U, s, rotation = numpy.linalg.svd(metric)
-                radii = 1.0 / numpy.sqrt(s)
                 # now carry on with EOL's answer
-                u = numpy.linspace(0.0, 2.0 * numpy.pi, 100)
-                v = numpy.linspace(0.0, numpy.pi, 100)
-                x = radii[0] * numpy.outer(numpy.cos(u), numpy.sin(v))
-                y = radii[1] * numpy.outer(numpy.sin(u), numpy.sin(v))
-                z = radii[2] * numpy.outer(numpy.ones_like(u), numpy.cos(v))
-                for i in range(len(x)):
-                    for j in range(len(x)):
-                        [x[i, j], y[i, j], z[i, j]] = numpy.dot([x[i, j], y[i, j], z[i, j]], rotation) + center
+                u = numpy.linspace(0.0, 2.0 * numpy.pi, 12)
+                v = numpy.linspace(0.0, numpy.pi, 6)
+                x = int(s[0]>1e-10)*numpy.outer(numpy.cos(u), numpy.sin(v))
+                y = int(s[1]>1e-10)*numpy.outer(numpy.sin(u), numpy.sin(v))
+                z = (int(s[2]>1e-10)+1e-5)*numpy.outer(numpy.ones_like(u), numpy.cos(v))
+                for i in range(x.shape[0]):
+                    for j in range(x.shape[1]):
+                        [x[i, j], y[i, j], z[i, j]] = numpy.dot([x[i, j], y[i, j], z[i, j]], numpy.sqrt(scale)*rotation) + center
 
-                # plot
-                fig = plt.figure()
-                ax = fig.add_subplot(111, projection='3d')
-                ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='b', alpha=1)
+                ax.plot_wireframe(x, y, z, rstride=1, cstride=1, color=color_map[i_point], alpha=1)
             else:
                 [u, s, v] = numpy.linalg.svd(metric)
                 u = numpy.dot(u[:, 0:intrinsic_dim], numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
@@ -380,19 +378,19 @@ def print_metrics(noisy_sensor_clusters, metric_list_full, intrinsic_dim, titleS
 
             if elipse:
                 U, s, rotation = numpy.linalg.svd(metric)
-                radii = 1.0 / numpy.sqrt(s)
+                radii = (1.0 / numpy.sqrt(s))/3
                 radii[intrinsic_dim:] = 0
                 # now carry on with EOL's answer
-                u = numpy.linspace(0.0, 2.0 * numpy.pi, 10)
-                v = numpy.linspace(0.0, numpy.pi, 10)
+                u = numpy.linspace(0.0, 2.0 * numpy.pi, 12)
+                v = numpy.linspace(0.0, numpy.pi, 6)
                 x = radii[0] * numpy.outer(numpy.cos(u), numpy.sin(v))
                 y = radii[1] * numpy.outer(numpy.sin(u), numpy.sin(v))
                 z = radii[2] * numpy.outer(numpy.ones_like(u), numpy.cos(v))
-                for i in range(len(x)):
-                    for j in range(len(x)):
+                for i in range(x.shape[0]):
+                    for j in range(x.shape[1]):
                         [x[i, j], y[i, j], z[i, j]] = numpy.dot([x[i, j], y[i, j], z[i, j]], numpy.sqrt(scale)*rotation) + center
 
-                ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='b', alpha=0.2)
+                ax.plot_wireframe(x, y, z, rstride=1, cstride=1, color=color_map[i_point], alpha=1)
             else:
                 [u, s, v] = numpy.linalg.svd(metric)
                 u = numpy.dot(u[:, 0:intrinsic_dim], numpy.sqrt(scale)*numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
