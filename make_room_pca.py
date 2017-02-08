@@ -82,13 +82,7 @@ min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
 movie_pca = min_max_scaler.fit_transform(movie_pca.T).T
 
 
-sensor_noisy_base = movie_pca[:, numpy.arange(0, n_frames, 2)]
-numpy.savetxt(sim_dir + '/' + 'sensor_noisy_base.txt', sensor_noisy_base, delimiter=',')
-
-sensor_noisy_step = movie_pca[:, numpy.arange(1, n_frames, 2)]
-numpy.savetxt(sim_dir + '/' + 'sensor_noisy_step.txt', sensor_noisy_step, delimiter=',')
-
-sensor_noisy_base = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy_base.txt', delimiter=',')
-sensor_noisy_step = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy_step.txt', delimiter=',')
+sensor_noisy = movie_pca[:, numpy.arange(0, n_frames, 2)]
+numpy.savetxt(sim_dir + '/' + 'sensor_noisy.txt', sensor_noisy, delimiter=',')
 
 

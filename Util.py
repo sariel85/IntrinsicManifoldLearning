@@ -4,6 +4,14 @@ import numpy
 import matplotlib.pyplot as plt
 from math import sqrt
 from sklearn import manifold
+from time import time
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.ticker import NullFormatter
+
+from sklearn import manifold, datasets
+
 
 
 def get_short_range_dist(sampled_process, ind_cluster_center_points, n_knn, intrinsic_process, approximated, k=5, process_var=1):
@@ -203,7 +211,7 @@ def calc_dist(points, metrics=None):
 
     return dist_mat
 
-def get_metrics_from_points(cluster_centers, input_base, input_step, n_neighbors_cov, dim_intrinsic, intrinsic_variance):
+def get_metrics_from_points(cluster_centers, input_base, input_step, n_neighbors_cov, dim_intrinsic, intrinsic_variance, measurement_variance):
 
     n_cluster_points = cluster_centers.shape[1]
     distance_metrix = scipy.spatial.distance.cdist(cluster_centers.T, input_base.T, metric='sqeuclidean')
@@ -222,8 +230,8 @@ def get_metrics_from_points(cluster_centers, input_base, input_step, n_neighbors
         s_def = numpy.copy(s)
         s_def[dim_intrinsic:] = float('Inf')
         s_def = 1 / s_def
-        #if s_def[dim_intrinsic:] < numpy.finfo(numpy.float32).eps:
-        #    s_full[dim_intrinsic:] = numpy.finfo(numpy.float32).eps
+        if s_def[dim_intrinsic:] < numpy.finfo(numpy.float64).eps:
+            s_full[dim_intrinsic:] = numpy.max(numpy.finfo(numpy.float64).eps, measurement_variance)
 
         s_full = 1 / s_full
         cov_list_def[x] = intrinsic_variance*numpy.dot(U, numpy.dot(numpy.diag(s_def), V))
@@ -232,27 +240,34 @@ def get_metrics_from_points(cluster_centers, input_base, input_step, n_neighbors
 
     return cov_list_def, cov_list_full
 
-def get_metrics_from_points_static(noisy_sensor_measured, dim_intrinsic, intrinsic_variance):
+def get_metrics_from_points_static(noisy_sensor_measured, dim_intrinsic, intrinsic_variance, measurement_variance):
 
+    dim_measured = noisy_sensor_measured.shape[0]
+    n_cluster_points = int(noisy_sensor_measured.shape[1]/(dim_intrinsic+1))
 
     cov_list_def = [None] * n_cluster_points
     cov_list_full = [None] * n_cluster_points
 
-    for x in range(0, knn_indexes.shape[0]):
-        temp_cov = numpy.cov(diff_clusters[:, x, :])
+    noisy_sensor_measured = noisy_sensor_measured.T
+    for i_cluster in range(n_cluster_points):
+        J_temp = numpy.zeros((dim_measured, dim_intrinsic))
+        for i_dim in range(dim_intrinsic):
+            J_temp[:, i_dim] = (noisy_sensor_measured[i_cluster*(dim_intrinsic+1) + i_dim + 1, :] - noisy_sensor_measured[i_cluster*(dim_intrinsic+1), :])/numpy.sqrt(intrinsic_variance)
+
+        temp_cov = numpy.dot(J_temp, J_temp.T)
         U, s, V = numpy.linalg.svd(temp_cov)
         s_full = numpy.copy(s)
         s_def = numpy.copy(s)
         s_def[dim_intrinsic:] = float('Inf')
         s_def = 1 / s_def
-        #if s_def[dim_intrinsic:] < numpy.finfo(numpy.float32).eps:
-        #    s_full[dim_intrinsic:] = numpy.finfo(numpy.float32).eps
+
+        if s_def[dim_intrinsic:] < numpy.finfo(numpy.float64).eps:
+            s_full[dim_intrinsic:] = numpy.max(numpy.finfo(numpy.float64).eps, measurement_variance)
 
         s_full = 1 / s_full
-        cov_list_def[x] = intrinsic_variance*numpy.dot(U, numpy.dot(numpy.diag(s_def), V))
-        cov_list_full[x] = intrinsic_variance*numpy.dot(U, numpy.dot(numpy.diag(s_full), V))
-
-
+        cov_list_def[i_cluster] = numpy.dot(U, numpy.dot(numpy.diag(s_def), V))
+        cov_list_full[i_cluster] = numpy.dot(U, numpy.dot(numpy.diag(s_full), V))
+    noisy_sensor_measured = noisy_sensor_measured.T
     return cov_list_def, cov_list_full
 
 
@@ -305,7 +320,7 @@ def calc_diff_map(dist_mat, dims=2, factor=2):
     U, S, V = numpy.linalg.svd(normlized_kernal)
     return U[:, 1:dims+1]
 
-def print_metrics(noisy_sensor_clusters, metric_list, intrinsic_dim, titleStr, scale, space_mode):
+def print_metrics(noisy_sensor_clusters, metric_list, intrinsic_dim, titleStr, scale, space_mode, elipse):
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
@@ -315,29 +330,69 @@ def print_metrics(noisy_sensor_clusters, metric_list, intrinsic_dim, titleStr, s
     if space_mode is True:
         for i_point in range(0, n_points):
             metric = metric_list[i_point]
-            [u, s, v] = numpy.linalg.svd(metric)
-            u = numpy.dot(u[:, 0:intrinsic_dim], numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
-            sign = numpy.sign(u[0, 0])
-            ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                      noisy_sensor_clusters[2, i_point], sign*u[0, 0], sign*u[1, 0], sign*u[2, 0],
-                      length=3*numpy.sqrt(scale), pivot='tail')
-            sign = numpy.sign(u[0, 1])
-            ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                      noisy_sensor_clusters[2, i_point], sign*u[0, 1], sign*u[1, 1], sign*u[2, 1],
-                      length=3*numpy.sqrt(scale), pivot='tail')
+            center = noisy_sensor_clusters[:, i_point]
+
+            if elipse:
+                U, s, rotation = numpy.linalg.svd(metric)
+                radii = 1.0 / numpy.sqrt(s)
+                # now carry on with EOL's answer
+                u = numpy.linspace(0.0, 2.0 * numpy.pi, 100)
+                v = numpy.linspace(0.0, numpy.pi, 100)
+                x = radii[0] * numpy.outer(numpy.cos(u), numpy.sin(v))
+                y = radii[1] * numpy.outer(numpy.sin(u), numpy.sin(v))
+                z = radii[2] * numpy.outer(numpy.ones_like(u), numpy.cos(v))
+                for i in range(len(x)):
+                    for j in range(len(x)):
+                        [x[i, j], y[i, j], z[i, j]] = numpy.dot([x[i, j], y[i, j], z[i, j]], rotation) + center
+
+                # plot
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+                ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='b', alpha=1)
+            else:
+                [u, s, v] = numpy.linalg.svd(metric)
+                u = numpy.dot(u[:, 0:intrinsic_dim], numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
+                sign = numpy.sign(u[0, 0])
+                ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
+                          noisy_sensor_clusters[2, i_point], sign*u[0, 0], sign*u[1, 0], sign*u[2, 0],
+                          length=3*numpy.sqrt(scale), pivot='tail')
+                sign = numpy.sign(u[0, 1])
+                ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
+                          noisy_sensor_clusters[2, i_point], sign*u[0, 1], sign*u[1, 1], sign*u[2, 1],
+                          length=3*numpy.sqrt(scale), pivot='tail')
+
     else:
+
         for i_point in range(0, n_points):
             metric = metric_list[i_point]
-            [u, s, v] = numpy.linalg.svd(metric)
-            u = numpy.dot(u[:, 0:intrinsic_dim], numpy.sqrt(scale)*numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
-            sign = numpy.sign(u[0, 0])
-            ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                      noisy_sensor_clusters[2, i_point], sign*u[0, 0], sign*u[1, 0], sign*u[2, 0],
-                      length=numpy.linalg.norm(u[:, 0]), pivot='tail')
-            sign = numpy.sign(u[0, 1])
-            ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                      noisy_sensor_clusters[2, i_point], sign*u[0, 1], sign*u[1, 1], sign*u[2, 1],
-                      length=numpy.linalg.norm(u[:, 1]), pivot='tail')
+            center = noisy_sensor_clusters[:, i_point]
+
+            if elipse:
+                U, s, rotation = numpy.linalg.svd(metric)
+                radii = 1.0 / numpy.sqrt(s)
+                radii[intrinsic_dim:] = 0
+                # now carry on with EOL's answer
+                u = numpy.linspace(0.0, 2.0 * numpy.pi, 10)
+                v = numpy.linspace(0.0, numpy.pi, 10)
+                x = radii[0] * numpy.outer(numpy.cos(u), numpy.sin(v))
+                y = radii[1] * numpy.outer(numpy.sin(u), numpy.sin(v))
+                z = radii[2] * numpy.outer(numpy.ones_like(u), numpy.cos(v))
+                for i in range(len(x)):
+                    for j in range(len(x)):
+                        [x[i, j], y[i, j], z[i, j]] = numpy.dot([x[i, j], y[i, j], z[i, j]], numpy.sqrt(scale)*rotation) + center
+
+                ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='b', alpha=0.2)
+            else:
+                [u, s, v] = numpy.linalg.svd(metric)
+                u = numpy.dot(u[:, 0:intrinsic_dim], numpy.sqrt(scale)*numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
+                sign = numpy.sign(u[0, 0])
+                ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
+                          noisy_sensor_clusters[2, i_point], sign*u[0, 0], sign*u[1, 0], sign*u[2, 0],
+                          length=numpy.linalg.norm(u[:, 0]), pivot='tail')
+                sign = numpy.sign(u[0, 1])
+                ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
+                          noisy_sensor_clusters[2, i_point], sign*u[0, 1], sign*u[1, 1], sign*u[2, 1],
+                          length=numpy.linalg.norm(u[:, 1]), pivot='tail')
     ax.set_title(titleStr)
 
 def print_drift(noisy_sensor_clusters, drift, titleStr):
@@ -746,9 +801,76 @@ def trim_non_euc2(dist_mat_trust, dim_intrinsic, intrinsic_process_clusters):
     dist_mat_trimmed = dist_mat_trimmed/numpy.maximum(dist_mat_trimmed_wgt, numpy.ones(dist_mat_trimmed_wgt.shape))
     return dist_mat_trimmed, dist_mat_trimmed_wgt
 
+def test_ml(X, n_neighbors, n_components, color):
 
 
+    X = X.T
 
+    fig = plt.figure(figsize=(15, 8))
+    plt.suptitle("Manifold Learning with %i points, %i neighbors"
+                 % (1000, n_neighbors), fontsize=14)
+
+    try:
+        # compatibility matplotlib < 1.0
+        ax = fig.add_subplot(251, projection='3d')
+        ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=color)
+        ax.view_init(4, -72)
+    except:
+        ax = fig.add_subplot(251, projection='3d')
+        plt.scatter(X[:, 0], X[:, 2], c=color)
+
+    methods = ['standard', 'ltsa', 'hessian', 'modified']
+    labels = ['LLE', 'LTSA', 'Hessian LLE', 'Modified LLE']
+
+    for i, method in enumerate(methods):
+        t0 = time()
+        Y = manifold.LocallyLinearEmbedding(n_neighbors, n_components,
+                                            eigen_solver='auto',
+                                            method=method).fit_transform(X)
+        t1 = time()
+        print("%s" % (methods[i]))
+
+        ax = fig.add_subplot(252 + i)
+        plt.scatter(Y[:, 0], Y[:, 1], c=color)
+        plt.title("%s" % (labels[i]))
+        ax.xaxis.set_major_formatter(NullFormatter())
+        ax.yaxis.set_major_formatter(NullFormatter())
+        plt.axis('tight')
+
+    t0 = time()
+    Y = manifold.Isomap(n_neighbors, n_components).fit_transform(X)
+    t1 = time()
+    ax = fig.add_subplot(257)
+    plt.scatter(Y[:, 0], Y[:, 1], c=color)
+    plt.title("Isomap")
+    ax.xaxis.set_major_formatter(NullFormatter())
+    ax.yaxis.set_major_formatter(NullFormatter())
+    plt.axis('tight')
+
+    t0 = time()
+    mds = manifold.MDS(n_components, max_iter=100, n_init=1)
+    Y = mds.fit_transform(X)
+    t1 = time()
+    ax = fig.add_subplot(258)
+    plt.scatter(Y[:, 0], Y[:, 1], c=color)
+    plt.title("MDS")
+    ax.xaxis.set_major_formatter(NullFormatter())
+    ax.yaxis.set_major_formatter(NullFormatter())
+    plt.axis('tight')
+
+    t0 = time()
+    se = manifold.SpectralEmbedding(n_components=n_components,
+                                    n_neighbors=n_neighbors)
+    Y = se.fit_transform(X)
+    t1 = time()
+    ax = fig.add_subplot(259)
+    plt.scatter(Y[:, 0], Y[:, 1], c=color)
+    plt.title("SpectralEmbedding")
+    ax.xaxis.set_major_formatter(NullFormatter())
+    ax.yaxis.set_major_formatter(NullFormatter())
+    plt.axis('tight')
+
+    plt.show()
 
 
 

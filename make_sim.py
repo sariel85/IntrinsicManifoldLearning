@@ -59,11 +59,18 @@ def potential_func (point):
     print_potential(potential_func, x_low=-18, x_high=18, y_low=-13, y_high=25, step=0.2)
 '''
 
-sim_dir_name = "2D Room - Non Convex"
+sim_dir_name = "2D Unit Square - Triangulation"
+process_mode = "Static"
+intrinsic_variance = 0.05**2
+bounding_shape = BoundingShape( vertices=[(0, 0), (1, 0), (1, 1), (0, 1)])
+
+'''
+sim_dir_name = "2D Room - Non Convex - 2"
 process_mode = "Static"
 intrinsic_variance = 0.1**2
-bounding_shape = BoundingShape( vertices=[(2.4, 0.5), (2.4, 1.13), (1, 1.13), (1, 3.8), (0.3, 3.8), (0.3,5.2), (1.4, 5),(1.4,4.2), (3.7,4.2), (3.7,6.1), (15.3, 6.1), (15.3, 3.4), (14.1, 3.4), (14.1, 1.25), (15.25,1.25), (15.25, 0.5), (10.4, 0.5), (10.4, 4.25), (6.2, 4.25), (6.2, 0.5)])
+bounding_shape = BoundingShape( vertices=[(2.4, 0.5), (2.4, 1.13), (1, 1.13), (1, 3.15), (0.3, 3.15), (0.3,5.2), (1.4, 5),(1.4,4.2), (3.7,4.2), (3.7,6.1), (15.3, 6.1), (15.3, 4.1), (14.1, 4.1), (14.1, 2), (15.25, 2), (15.25, 0.5), (10.4, 0.5), (10.4, 4.25), (6.2, 4.25), (6.2, 0.5)])
 #added_dim_limits = numpy.asarray([[0., 6.]]).T
+'''
 '''
 sim_dir_name = "2D Water Molecule"
 r = 0.7

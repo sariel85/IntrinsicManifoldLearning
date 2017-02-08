@@ -6,7 +6,7 @@ from DataGeneration import BoundingShape, ItoGenerator, print_process, create_co
 import matplotlib.pyplot as plt
 from ObservationModes import *
 
-sim_dir_name = "2D Room - Non Convex"
+sim_dir_name = "2D Unit Square - Triangulation"
 intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
 
@@ -25,26 +25,27 @@ n_points = intrinsic_to_measure.shape[1]
 #ant_1 = numpy.asarray([[0.75], [-0.5]])
 #ant_2 = numpy.asarray([[1.5], [1.5]])
 #ant_3 = numpy.asarray([[-0.5], [1.5]])
-'''
-ant_1 = numpy.asarray([[0.75], [-0.5]])
-ant_2 = numpy.asarray([[1.5], [1.5]])
-ant_3 = numpy.asarray([[-0.5], [1.5]])
 
-range_factor = [[10], [10], [10]]
+measurement_variance = 0.0000001
+ant_1 = numpy.asarray([[1.], [1.]])
+ant_2 = numpy.asarray([[-0.25], [0.75]])
+ant_3 = numpy.asarray([[0.75], [-0.25]])
+
+range_factor = [[1], [1], [1]]
 antenas = numpy.concatenate((ant_1, ant_2, ant_3), axis=1)
-amplitudes = [[1],[3],[7]]
-exact_sensor_base = antena(intrinsic_process_base, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
-exact_sensor_step = antena(intrinsic_process_step, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
-'''
+amplitudes = [[2],[2],[2]]
+exact_sensor = antena(intrinsic_to_measure, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
 
 #exact_sensor_base = twirl(intrinsic_process_base, k=0.3)
 #exact_sensor_step = twirl(intrinsic_process_step, k=0.3)
 #exact_sensor_base = swissroll(intrinsic_process_base, k=8)
 #exact_sensor_step = swissroll(intrinsic_process_step, k=8)
 
+'''
 measurement_variance = 0.
 #exact_sensor = singers_mushroom(intrinsic_to_measure)
-exact_sensor = whole_sphere(intrinsic_to_measure)/2
+exact_sensor = whole_sphere((intrinsic_to_measure-6)/5)/2
+'''
 
 # Realistic Measurement
 noisy_sensor = exact_sensor + numpy.sqrt(measurement_variance) * numpy.random.randn(exact_sensor.shape[0], n_points)
@@ -61,8 +62,8 @@ points_plot_index = numpy.random.choice(n_points, size=n_plot_points, replace=Fa
 
 color_map = create_color_map(intrinsic_to_measure)
 
-print_process(intrinsic_to_measure, indexs=points_plot_index, bounding_shape=None, color_map=color_map, titleStr="Intrinsic Base Process")
-print_process(exact_sensor, indexs=points_plot_index, bounding_shape=None, color_map=color_map, titleStr="Sensor Clean Base Process")
-print_process(noisy_sensor, indexs=points_plot_index, bounding_shape=None, color_map=color_map, titleStr="Sensor Noisy Base Process")
+print_process(intrinsic_to_measure, indexs=points_plot_index, bounding_shape=None, color_map=color_map, titleStr="Intrinsic Process")
+print_process(exact_sensor, indexs=points_plot_index, bounding_shape=None, color_map=color_map, titleStr="Observed Process")
+print_process(noisy_sensor, indexs=points_plot_index, bounding_shape=None, color_map=color_map, titleStr="Observed Process + Noise")
 
 plt.show(block=True)

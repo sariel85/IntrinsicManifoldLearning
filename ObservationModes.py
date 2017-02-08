@@ -66,9 +66,9 @@ def whole_sphere(intrinsic_process):
     theta = numpy.arctan(intrinsic_process[1, :] / intrinsic_process[0, :])
     theta[numpy.where(intrinsic_process[0, :] < 0)] = theta[numpy.where(intrinsic_process[0, :] < 0)]+numpy.pi
 
-    observed_process[0] = numpy.sin(0.1*radius)*numpy.sin(theta)
-    observed_process[1] = numpy.sin(0.1*radius)*numpy.cos(theta)
-    observed_process[2] = -numpy.cos(0.1*radius)
+    observed_process[0] = numpy.sin(1*radius)*numpy.sin(theta)
+    observed_process[1] = numpy.sin(1*radius)*numpy.cos(theta)
+    observed_process[2] = -numpy.cos(1*radius)
     return observed_process
 
 
@@ -184,7 +184,7 @@ def antena(intrinsic_process, centers, amplitudes, range_factor):
         dists = (intrinsic_process.T - centers[:, i_antena].T).T
         dists = dists * dists
         dists = numpy.sqrt(numpy.sum(dists, axis=0))
-        observed_process[i_antena, :] = amplitudes[i_antena]*(1/(dists))
+        observed_process[i_antena, :] = amplitudes[i_antena]*(1/(range_factor[i_antena]+dists))
         #observed_process[i_antena, :] = dists
     return observed_process
 

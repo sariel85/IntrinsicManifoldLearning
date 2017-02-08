@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from DataGeneration import print_process, create_color_map
 import numpy
 
-sim_dir_name = "2D Room - Non Convex"
+sim_dir_name = "2D Unit Square - Triangulation"
 process_mode = "Static"
 
 #sim_dir_name = "2D Room - Exact Limits - More Points - No Override"
@@ -17,7 +17,7 @@ intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
 intrinsic_simulated_process = numpy.load(sim_dir + '/' + intrinsic_process_file_name).T
 intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=numpy.float64)
 
-n_points_used = 100
+n_points_used = 1000000
 
 n_points = intrinsic_simulated_process.shape[1]
 
