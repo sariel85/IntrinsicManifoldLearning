@@ -335,6 +335,8 @@ def trim_distances_topo(dist_mat, dist_potential, radius_trim, intrinsic_process
                 pre_temp = predecessors[i_x, pre_temp]
             if all(edge == False for edge in edge_list):
                 dist_mat_trim[i_x, i_y] = dist_mat[i_x, i_y]
+            elif all(edge == True for edge in edge_list) and dist_mat[i_x, i_y]<2*radius_trim:
+                dist_mat_trim[i_x, i_y] = dist_mat[i_x, i_y]
             elif (edge_list[0]== True) and all(edge == False for edge in edge_list[1:]):
                 dist_mat_trim[i_x, i_y] = dist_mat[i_x, i_y]
             elif (edge_list[-1]== True) and all(edge == False for edge in edge_list[:-1]):
@@ -342,9 +344,9 @@ def trim_distances_topo(dist_mat, dist_potential, radius_trim, intrinsic_process
             elif (edge_list[1]== True) and (edge_list[-1]== True) and all(edge == False for edge in edge_list[1:-1]):
                 dist_mat_trim[i_x, i_y] = dist_mat[i_x, i_y]
 
-    #fig = plt.figure()
-    #ax = fig.gca()
-    #ax.scatter(intrinsic_process[0, :], intrinsic_process[1, :], c="k")
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.scatter(intrinsic_process[0, :], intrinsic_process[1, :], c="k")
 
     #for i_x in range(0, n_points):
     #    for i_y in range(0, n_points):
@@ -352,10 +354,10 @@ def trim_distances_topo(dist_mat, dist_potential, radius_trim, intrinsic_process
     #            ax.plot(intrinsic_process[0, [i_x,i_y]], intrinsic_process[1, [i_x,i_y]], '-', c='k')
 
 
-    #for i_x in range(0, n_points):
-    #    for i_y in range(0, n_points):
-    #        if (dist_mat_trim[i_x, i_y]==0):
-    #            ax.plot(intrinsic_process[0, [i_x,i_y]], intrinsic_process[1, [i_x,i_y]], '-', c='k')
+    for i_x in range(0, n_points):
+        for i_y in range(0, n_points):
+            if (dist_mat_trim[i_x, i_y]==0):
+                ax.plot(intrinsic_process[0, [i_x,i_y]], intrinsic_process[1, [i_x,i_y]], '-', c='k')
 
     return dist_mat_trim
 

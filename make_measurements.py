@@ -6,7 +6,7 @@ from DataGeneration import BoundingShape, ItoGenerator, print_process, create_co
 import matplotlib.pyplot as plt
 from ObservationModes import *
 
-sim_dir_name = "2D Room - Video"
+sim_dir_name = "2D Room - Triangulation"
 intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
 
