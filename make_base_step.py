@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from DataGeneration import print_process, create_color_map
 import numpy
 
-sim_dir_name = "2D Unit Square - Triangulation"
+sim_dir_name = "2D Room - Video"
 process_mode = "Static"
 
 #sim_dir_name = "2D Room - Exact Limits - More Points - No Override"

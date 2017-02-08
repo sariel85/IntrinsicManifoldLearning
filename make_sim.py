@@ -48,22 +48,18 @@ def potential_func (point): return -alpha*(numpy.exp(-beta*numpy.square(numpy.li
 sim_dir_name = "2D Triple Gaussian "
 '''
 
-'''
-sim_dir_name = "2D Room - Exact Limits - More Points"
-intrinsic_variance = 0.1
-bounding_shape = BoundingShape( vertices=[(7.7, 15.6), (7.7, -3.96), (-6.3, -3.96), (-6.3, -2.54), (-9.30, -2.54), (-9.30, 8.4), (-11.15, 8.4),
-              (-11.15, 11.95), (-9.35, 11.95), (-9.35, 10.85), (0.05, 10.85), (0.05, 15.6)])
-def potential_func (point):
-    bounding_shape = BoundingShape(vertices=[(7.7, 15.6), (7.7, -3.96), (-6.3, -3.96), (-6.3, -2.54), (-9.30, -2.54), (-9.30, 8.4), (-11.15, 8.4), (-11.15, 11.95), (-9.35, 11.95), (-9.35, 10.85), (0.05, 10.85), (0.05, 15.6)])
-    return bounding_potential(point, bounding_shape)
-    print_potential(potential_func, x_low=-18, x_high=18, y_low=-13, y_high=25, step=0.2)
-'''
 
+sim_dir_name = "2D Room - Video"
+process_mode = "Static"
+intrinsic_variance = 0.1
+bounding_shape = BoundingShape( vertices=[(7.7, 15.6), (7.7, -3.96), (-4, -3.96), (-4, 0), (-8, 0), (-8, 5.4), (-11.15, 5.4),
+              (-11.15, 13.5), (-6.35, 13.5), (-6.35, 10.85), (0.05, 10.85), (0.05, 15.6)])
+'''
 sim_dir_name = "2D Unit Square - Triangulation"
 process_mode = "Static"
 intrinsic_variance = 0.05**2
 bounding_shape = BoundingShape( vertices=[(0, 0), (1, 0), (1, 1), (0, 1)])
-
+'''
 '''
 sim_dir_name = "2D Room - Non Convex - 2"
 process_mode = "Static"
@@ -157,8 +153,8 @@ n_plot_points = 5000
 n_plot_points = min(n_points_simulated, n_plot_points)
 points_plot_index = numpy.random.choice(n_points_simulated, size=n_plot_points, replace=False)
 print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Process", color_map=color_map)
-color_map[numpy.where(dist_potential<0.1), :] = 0
-color_map[numpy.where(dist_potential>0.1), :] = 1
+color_map[numpy.where(dist_potential<0.4), :] = 0
+color_map[numpy.where(dist_potential>0.4), :] = 1
 print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Process", color_map=color_map)
 
 plt.show(block=True)
