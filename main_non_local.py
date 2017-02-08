@@ -28,7 +28,7 @@ noisy_sensor_measured = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy.txt', delimi
 intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=dtype)
 measurement_variance = numpy.load(sim_dir + '/' + 'measurement_variance.npy').astype(dtype=dtype)
 dist_potential = numpy.loadtxt(sim_dir + '/' + 'dist_potential_used.txt', delimiter=',', dtype=dtype)
-
+g
 dim_intrinsic = intrinsic_process.shape[0]
 dim_measurement = noisy_sensor_measured.shape[0]
 n_points = intrinsic_process.shape[1]
