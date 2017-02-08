@@ -26,17 +26,20 @@ n_points = intrinsic_to_measure.shape[1]
 #ant_2 = numpy.asarray([[1.5], [1.5]])
 #ant_3 = numpy.asarray([[-0.5], [1.5]])
 
+measurement_variance = 0.
+exact_sensor = whole_sphere((intrinsic_to_measure-6)/5)/2
 
+'''
 measurement_variance = 0.
 ant_1 = numpy.asarray([[12.], [17.]])
 ant_2 = numpy.asarray([[-15], [7.]])
 ant_3 = numpy.asarray([[-4.], [-7.5]])
 
-range_factor = [[5], [5], [5]]
+range_factor = [[2], [2], [2]]
 antenas = numpy.concatenate((ant_1, ant_2, ant_3), axis=1)
 amplitudes = [[2],[2],[2]]
 exact_sensor = antena(intrinsic_to_measure, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
-
+'''
 
 
 '''

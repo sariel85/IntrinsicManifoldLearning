@@ -14,8 +14,9 @@ intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
 
-intrinsic_simulated_process = numpy.load(sim_dir + '/' + intrinsic_process_file_name).T
+intrinsic_simulated_process = numpy.load(sim_dir + '/' + intrinsic_process_file_name).astype(dtype=numpy.float64).T
 intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=numpy.float64)
+dist_potential = numpy.load(sim_dir + '/' + 'dist_potential.npy').astype(dtype=numpy.float64)
 
 n_points_used = 1000000
 
@@ -30,6 +31,7 @@ else:
     points_used_index = numpy.random.choice(intrinsic_simulated_process.shape[1]-1, size=n_points_used, replace=False)
 
 intrinsic_points_to_use = intrinsic_simulated_process[:, points_used_index]
+dist_potential_to_use = dist_potential[points_used_index]
 
 dim_intrinsic = intrinsic_simulated_process.shape[0]
 
@@ -71,5 +73,6 @@ else:
     print_process(intrinsic_process_base, titleStr="Intrinsic Base Process")
     print_process(intrinsic_process_step, titleStr="Intrinsic Step Process")
 
+numpy.savetxt(sim_dir + '/' + 'dist_potential_used.txt', dist_potential_to_use, delimiter=',')
 numpy.savetxt(sim_dir + '/' + 'intrinsic_used.txt', intrinsic_points_to_use.T, delimiter=',')
 numpy.savetxt(sim_dir + '/' + 'intrinsic_process_to_measure.txt', intrinsic_process_to_measure.T, delimiter=',')

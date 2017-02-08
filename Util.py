@@ -311,6 +311,55 @@ def trim_distances(dist_mat, dist_mat_criteria=None, n_neighbors=10):
             dist_mat_trim[knn_indexes[i_x, i_y], i_x] = dist_mat[i_x, knn_indexes[i_x, i_y]]
     return dist_mat_trim
 
+def trim_distances_topo(dist_mat, dist_potential, radius_trim, intrinsic_process):
+
+    n_points = dist_mat.shape[0]
+    dist_mat_trim = numpy.zeros(dist_mat.shape)
+
+    [dist_mat, predecessors]  = scipy.sparse.csgraph.shortest_path(dist_mat, directed=False, return_predecessors=True, method='D')
+
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.scatter(intrinsic_process[0, numpy.where(dist_potential<radius_trim)], intrinsic_process[1, numpy.where(dist_potential<radius_trim)], c="r")
+
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.scatter(intrinsic_process[0, :], intrinsic_process[1, :], c="k")
+
+    for i_x in range(0, n_points):
+        for i_y in range(0, n_points):
+            pre_temp = i_y
+            edge_list = []
+            while pre_temp != -9999:
+                edge_list.append(dist_potential[pre_temp]<radius_trim)
+                pre_temp = predecessors[i_x, pre_temp]
+            if all(edge == False for edge in edge_list):
+                dist_mat_trim[i_x, i_y] = dist_mat[i_x, i_y]
+            elif (edge_list[0]== True) and all(edge == False for edge in edge_list[1:]):
+                dist_mat_trim[i_x, i_y] = dist_mat[i_x, i_y]
+            elif (edge_list[-1]== True) and all(edge == False for edge in edge_list[:-1]):
+                dist_mat_trim[i_x, i_y] = dist_mat[i_x, i_y]
+            elif (edge_list[1]== True) and (edge_list[-1]== True) and all(edge == False for edge in edge_list[1:-1]):
+                dist_mat_trim[i_x, i_y] = dist_mat[i_x, i_y]
+
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.scatter(intrinsic_process[0, :], intrinsic_process[1, :], c="k")
+
+    for i_x in range(0, n_points):
+        for i_y in range(0, n_points):
+            if (dist_mat_trim[i_x, i_y]!=0):
+                ax.plot(intrinsic_process[0, [i_x,i_y]], intrinsic_process[1, [i_x,i_y]], '-', c='k')
+
+
+    #for i_x in range(0, n_points):
+    #    for i_y in range(0, n_points):
+    #        if (dist_mat_trim[i_x, i_y]==0):
+    #            ax.plot(intrinsic_process[0, [i_x,i_y]], intrinsic_process[1, [i_x,i_y]], '-', c='k')
+
+    return dist_mat_trim
+
+
 
 def calc_diff_map(dist_mat, dims=2, factor=2):
     sigma = numpy.median(dist_mat)/factor

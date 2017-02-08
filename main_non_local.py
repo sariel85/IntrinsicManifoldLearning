@@ -8,10 +8,10 @@ from non_local_tangent import non_local_tangent_net
 sim_dir_name = "2D Room - Video" #Which dataset to run
 process_mode = "Static"
 
-n_points_used_for_dynamics = 2000 #How many points are available from which to infer dynamics
-n_points_used_for_plotting_dynamics = 2000
-n_points_used_for_clusters = 2000 #How many cluster to use in Kernal method
-n_points_used_for_clusters_2 = 2000 #How many cluster to use in Kernal method
+n_points_used_for_dynamics = 500 #How many points are available from which to infer dynamics
+n_points_used_for_plotting_dynamics = 400
+n_points_used_for_clusters = 450 #How many cluster to use in Kernal method
+n_points_used_for_clusters_2 = 400 #How many cluster to use in Kernal method
 
 n_neighbors_cov = 40 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 20 #How many short distances are kept for each cluster point
@@ -27,6 +27,7 @@ intrinsic_process = numpy.loadtxt(sim_dir + '/' + 'intrinsic_used.txt', delimite
 noisy_sensor_measured = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy.txt', delimiter=',', dtype=dtype).T
 intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=dtype)
 measurement_variance = numpy.load(sim_dir + '/' + 'measurement_variance.npy').astype(dtype=dtype)
+dist_potential = numpy.loadtxt(sim_dir + '/' + 'dist_potential_used.txt', delimiter=',', dtype=dtype)
 
 dim_intrinsic = intrinsic_process.shape[0]
 dim_measurement = noisy_sensor_measured.shape[0]
@@ -57,6 +58,7 @@ points_used_dynamics_index = numpy.random.choice(n_points, size=n_points_used_fo
 
 intrinsic_process = intrinsic_process[:, points_used_dynamics_index]
 noisy_sensor = noisy_sensor[:, points_used_dynamics_index]
+dist_potential = dist_potential[points_used_dynamics_index]
 
 if process_mode == "Static":
     noisy_sensor_measured = noisy_sensor_measured.T
@@ -104,6 +106,7 @@ points_used_for_clusters_indexs = numpy.random.choice(n_points, size=n_points_us
 
 intrinsic_process_clusters = intrinsic_process[:, points_used_for_clusters_indexs]
 noisy_sensor_clusters = noisy_sensor[:, points_used_for_clusters_indexs]
+dist_potential_clusters = dist_potential[points_used_for_clusters_indexs]
 
 if process_mode == "Static":
     noisy_sensor_measured = noisy_sensor_measured.T
@@ -178,7 +181,7 @@ dist_mat_measured_geo = scipy.sparse.csgraph.shortest_path(dist_mat_measured_tri
 
 #dist_mat_net_tangent_trimmed = trim_distances(dist_mat_net_tangent, dist_mat_local_full, n_neighbors=n_neighbors_mds)
 #dist_mat_net_intrinsic_trimmed = trim_distances(dist_mat_net_intrinsic, dist_mat_true, n_neighbors=n_neighbors_mds)
-dist_mat_local_trimmed = trim_distances(dist_mat_local, dist_mat_true, n_neighbors=n_neighbors_mds)
+dist_mat_local_trimmed = trim_distances(dist_mat_local, dist_mat_local_full, n_neighbors=n_neighbors_mds)
 dist_mat_true_trimmed = trim_distances(dist_mat_true, n_neighbors=n_neighbors_mds)
 
 
@@ -191,28 +194,31 @@ dist_mat_true_geo = scipy.sparse.csgraph.shortest_path(dist_mat_true_trimmed, di
 #Reclustering
 
 n_points_used_for_clusters_2 = min(n_points_used_for_clusters, n_points_used_for_clusters_2)
-n_points_used_for_clusters_indexs_2 = numpy.random.choice(n_points_used_for_clusters, size=n_points_used_for_clusters_2, replace=False)
-intrinsic_process_clusters_2 = intrinsic_process_clusters[:, n_points_used_for_clusters_indexs_2]
-noisy_sensor_clusters_2 = noisy_sensor_clusters[:, n_points_used_for_clusters_indexs_2]
+points_used_for_clusters_indexs_2 = numpy.random.choice(n_points_used_for_clusters, size=n_points_used_for_clusters_2, replace=False)
+intrinsic_process_clusters_2 = intrinsic_process_clusters[:, points_used_for_clusters_indexs_2]
+noisy_sensor_clusters_2 = noisy_sensor_clusters[:, points_used_for_clusters_indexs_2]
+dist_potential_2 = dist_potential_clusters[points_used_for_clusters_indexs_2]
 n_points_used_for_clusters_2 = intrinsic_process_clusters_2.shape[1]
 
-color_map_clusters_2 = color_map_clusters[n_points_used_for_clusters_indexs_2, :]
+color_map_clusters_2 = color_map_clusters[points_used_for_clusters_indexs_2, :]
 
-dist_mat_local_geo = dist_mat_local_geo[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
-dist_mat_true_geo = dist_mat_true_geo[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
-dist_mat_measured_geo = dist_mat_measured_geo[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
-dist_mat_local_full = dist_mat_local_full[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
-dist_mat_true = dist_mat_true[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
+dist_mat_local_geo = dist_mat_local_geo[points_used_for_clusters_indexs_2, :][:,points_used_for_clusters_indexs_2]
+dist_mat_true_geo = dist_mat_true_geo[points_used_for_clusters_indexs_2, :][:,points_used_for_clusters_indexs_2]
+dist_mat_measured_geo = dist_mat_measured_geo[points_used_for_clusters_indexs_2, :][:,points_used_for_clusters_indexs_2]
+dist_mat_local_full = dist_mat_local_full[points_used_for_clusters_indexs_2, :][:,points_used_for_clusters_indexs_2]
+dist_mat_true = dist_mat_true[points_used_for_clusters_indexs_2, :][:,points_used_for_clusters_indexs_2]
 
 #dist_mat_net_tangent_geo = dist_mat_net_tangent_geo[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 #dist_mat_net_intrinsic_geo = dist_mat_net_intrinsic_geo[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 
-dist_mat_local_trimmed = trim_distances(dist_mat_local_geo, dist_mat_local_full, n_neighbors=n_neighbors_mds)
+dist_mat_local_trimmed = trim_distances(dist_mat_local_geo, n_neighbors=n_neighbors_mds)
+dist_mat_local_trimmed_topo = trim_distances_topo(dist_mat_local_geo, dist_potential=dist_potential_2, radius_trim=1, intrinsic_process=intrinsic_process_clusters_2)
+
 #dist_mat_local_trimmed = dist_mat_local_trimmed[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 #dist_mat_net_intrinsic_trimmed = trim_distances(dist_mat_net_intrinsic_geo, dist_mat_true, n_neighbors=n_neighbors_mds)
 #dist_mat_net_intrinsic_trimmed = dist_mat_net_intrinsic_trimmed[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 
-dist_mat_true_trimmed = trim_distances(dist_mat_true, dist_mat_true, n_neighbors=n_neighbors_mds)
+dist_mat_true_trimmed = trim_distances(dist_mat_true, n_neighbors=n_neighbors_mds)
 
 
 mds = manifold.MDS(n_components=2, max_iter=2000, eps=1e-5, dissimilarity="precomputed", n_jobs=1, n_init=1)
@@ -220,6 +226,8 @@ mds = manifold.MDS(n_components=2, max_iter=2000, eps=1e-5, dissimilarity="preco
 
 #iso_embedding_local = intrinsic_isomaps(dist_mat_local_geo, dist_mat_local_trimmed, dim_intrinsic, intrinsic_process_clusters_2)
 iso_embedding_local = mds.fit(dist_mat_local_geo).embedding_
+iso_embedding_local_topo = mds.fit((1/2)*(dist_mat_local_trimmed_topo+dist_mat_local_trimmed_topo.T), weight=(dist_mat_local_trimmed_topo!=0).astype(int)).embedding_
+
 #iso_embedding_net_intrinsic = intrinsic_isomaps(dist_mat_net_intrinsic_geo, dist_mat_net_intrinsic_trimmed, dim_intrinsic, intrinsic_process_clusters_2)
 iso_embedding_true_sp = mds.fit(dist_mat_true_geo).embedding_
 iso_embedding_measured_sp = mds.fit(dist_mat_measured_geo).embedding_
@@ -249,6 +257,10 @@ iso_embedding_measured_sp = mds.fit(dist_mat_measured_geo).embedding_
 
 print_process(iso_embedding_local.T, bounding_shape=None, color_map=color_map_clusters_2, titleStr="Isomap with Locally Learned Intrinsic Metric", align_points=intrinsic_process_clusters_2)
 stress, stress_normlized = embbeding_score(intrinsic_process_clusters_2, iso_embedding_local.T, titleStr="Isomap with Locally Learned Intrinsic Metric", n_points=n_points_used_for_clusters_2)
+print('iso_embedding_local:', stress_normlized)
+
+print_process(iso_embedding_local_topo.T, bounding_shape=None, color_map=color_map_clusters_2, titleStr="Isomap with Locally Learned Intrinsic Metric", align_points=intrinsic_process_clusters_2)
+stress, stress_normlized = embbeding_score(intrinsic_process_clusters_2, iso_embedding_local_topo.T, titleStr="Isomap with Locally Learned Intrinsic Metric and Topo", n_points=n_points_used_for_clusters_2)
 print('iso_embedding_local:', stress_normlized)
 
 print_process(iso_embedding_true_sp.T, bounding_shape=None, color_map=color_map_clusters_2, titleStr="Isomap with Exact Short Distances", align_points=intrinsic_process_clusters_2)
