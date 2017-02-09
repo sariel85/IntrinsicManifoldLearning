@@ -1,89 +1,80 @@
-print(__doc__)
-
-from time import time
-
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import absolute_import
+from DataGeneration import print_process, create_color_map
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.ticker import NullFormatter
-
-from sklearn import manifold, datasets
-
-# Next line to silence pyflakes. This import is needed.
-Axes3D
+import numpy, numpy.random
+from DataGeneration import print_process, create_color_map, print_dynamics
+from Util import *
 
 n_points = 1000
-X, color = datasets.samples_generator.make_s_curve(n_points, random_state=0)
-n_neighbors = 10
-n_components = 2
+x_width = 1
+y_width = 4
+hole_start_x = 0.25
+hole_start_y = 1.5
+hole_width_x = 0.5
+hole_width_y = 2
 
-fig = plt.figure(figsize=(15, 8))
-plt.suptitle("Manifold Learning with %i points, %i neighbors"
-             % (1000, n_neighbors), fontsize=14)
+tube_radius = 0.8
 
-try:
-    # compatibility matplotlib < 1.0
-    ax = fig.add_subplot(251, projection='3d')
-    ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=color)
-    ax.view_init(4, -72)
-except:
-    ax = fig.add_subplot(251, projection='3d')
-    plt.scatter(X[:, 0], X[:, 2], c=color)
+noise_std = 0.05
 
-methods = ['standard', 'ltsa', 'hessian', 'modified']
-labels = ['LLE', 'LTSA', 'Hessian LLE', 'Modified LLE']
+n_neighbors_isomaps = 10
 
-for i, method in enumerate(methods):
-    t0 = time()
-    Y = manifold.LocallyLinearEmbedding(n_neighbors, n_components,
-                                        eigen_solver='auto',
-                                        method=method).fit_transform(X)
-    t1 = time()
-    print("%s: %.2g sec" % (methods[i], t1 - t0))
+#Generate Data Set
+intrinsic_points = numpy.zeros((2, n_points))
+intrinsic_points = intrinsic_points.T
+for i_point in range(n_points):
+    while 1:
+        test_point = numpy.asarray([numpy.random.rand()*x_width, numpy.random.rand()*y_width])
+        if not((test_point[0] > hole_start_x) and (test_point[0] < (hole_start_x + hole_width_x)) and (test_point[1] > hole_start_y) and (test_point[1] < hole_start_y + hole_width_y)):
+            break
+    intrinsic_points[i_point, :] = test_point
+intrinsic_points = intrinsic_points.T
 
-    ax = fig.add_subplot(252 + i)
-    plt.scatter(Y[:, 0], Y[:, 1], c=color, cmap=plt.cm.Spectral)
-    plt.title("%s (%.2g sec)" % (labels[i], t1 - t0))
-    ax.xaxis.set_major_formatter(NullFormatter())
-    ax.yaxis.set_major_formatter(NullFormatter())
-    plt.axis('tight')
+#Display Intrinsic Data Set
+color_map = create_color_map(intrinsic_points)
+print_process(intrinsic_points, color_map=color_map, titleStr="Intrinsic Space")
 
-t0 = time()
-Y = manifold.Isomap(n_neighbors, n_components).fit_transform(X)
-t1 = time()
-print("Isomap: %.2g sec" % (t1 - t0))
-ax = fig.add_subplot(257)
-plt.scatter(Y[:, 0], Y[:, 1], c=color, cmap=plt.cm.Spectral)
-plt.title("Isomap (%.2g sec)" % (t1 - t0))
-ax.xaxis.set_major_formatter(NullFormatter())
-ax.yaxis.set_major_formatter(NullFormatter())
-plt.axis('tight')
+#Isometric Deformed Manifold
+observed_points_clean = numpy.zeros((3, n_points))
+observed_points_clean[0, :] = intrinsic_points[0, :]
+observed_points_clean[1, :] = tube_radius*numpy.cos(intrinsic_points[1, :]/tube_radius)
+observed_points_clean[2, :] = tube_radius*numpy.sin(intrinsic_points[1, :]/tube_radius)
 
+print_process(observed_points_clean, color_map=color_map, titleStr="Observed Space - Clean Data")
 
-t0 = time()
-mds = manifold.MDS(n_components, max_iter=100, n_init=1)
-Y = mds.fit_transform(X)
-t1 = time()
-print("MDS: %.2g sec" % (t1 - t0))
-ax = fig.add_subplot(258)
-plt.scatter(Y[:, 0], Y[:, 1], c=color, cmap=plt.cm.Spectral)
-plt.title("MDS (%.2g sec)" % (t1 - t0))
-ax.xaxis.set_major_formatter(NullFormatter())
-ax.yaxis.set_major_formatter(NullFormatter())
-plt.axis('tight')
+observed_points = observed_points_clean + noise_std*numpy.random.randn(observed_points_clean.shape[0], observed_points_clean.shape[1])
 
+print_process(observed_points, color_map=color_map, titleStr="Observed Space")
 
-t0 = time()
-se = manifold.SpectralEmbedding(n_components=n_components,
-                                n_neighbors=n_neighbors)
-Y = se.fit_transform(X)
-t1 = time()
-print("SpectralEmbedding: %.2g sec" % (t1 - t0))
-ax = fig.add_subplot(259)
-plt.scatter(Y[:, 0], Y[:, 1], c=color, cmap=plt.cm.Spectral)
-plt.title("SpectralEmbedding (%.2g sec)" % (t1 - t0))
-ax.xaxis.set_major_formatter(NullFormatter())
-ax.yaxis.set_major_formatter(NullFormatter())
-plt.axis('tight')
+dist_mat_ground_truth = numpy.sqrt(calc_dist(intrinsic_points))
+dist_mat_observed_clean = numpy.sqrt(calc_dist(observed_points_clean))
+dist_mat_observed = numpy.sqrt(calc_dist(observed_points))
+
+dist_mat_ground_truth_trimmed = trim_distances(dist_mat_ground_truth, n_neighbors=n_neighbors_isomaps)
+dist_mat_observed_clean_trimmed = trim_distances(dist_mat_observed_clean, n_neighbors=n_neighbors_isomaps)
+dist_mat_observed_trimmed = trim_distances(dist_mat_observed, n_neighbors=n_neighbors_isomaps)
+
+dist_mat_ground_truth_geo_fill = scipy.sparse.csgraph.shortest_path(dist_mat_ground_truth_trimmed, directed=False)
+dist_mat_observed_clean_geo_fill = scipy.sparse.csgraph.shortest_path(dist_mat_observed_clean_trimmed, directed=False)
+dist_mat_observed_geo_fill = scipy.sparse.csgraph.shortest_path(dist_mat_observed_trimmed, directed=False)
+
+mds = manifold.MDS(n_components=2, max_iter=100, eps=1e-5, dissimilarity="precomputed", n_jobs=1, n_init=1)
+
+iso_embedding_observed_clean = mds.fit(dist_mat_observed_clean_geo_fill).embedding_.T
+iso_embedding_observed = mds.fit(dist_mat_observed_geo_fill).embedding_.T
+
+print_process(iso_embedding_observed_clean, bounding_shape=None, color_map=color_map, titleStr="Isomap with Locally Learned Intrinsic Metric", align_points=intrinsic_points)
+stress, stress_normlized = embbeding_score(intrinsic_points, iso_embedding_observed_clean, titleStr="Isomap with Locally Learned Intrinsic Metric", n_points=100)
+print('iso_embedding_observed_clean:', stress_normlized)
+
+print_process(iso_embedding_observed, bounding_shape=None, color_map=color_map, titleStr="Isomap with Locally Learned Intrinsic Metric", align_points=intrinsic_points)
+stress, stress_normlized = embbeding_score(intrinsic_points, iso_embedding_observed, titleStr="Isomap with Locally Learned Intrinsic Metric", n_points=100)
+print('iso_embedding_observed:', stress_normlized)
+
+plt.show(block=True)
 
 
-plt.show()
+

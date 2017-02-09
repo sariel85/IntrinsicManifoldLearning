@@ -3,9 +3,10 @@ from __future__ import absolute_import
 from DataGeneration import print_process, create_color_map, print_dynamics
 from Util import *
 import numpy
+
 from non_local_tangent import non_local_tangent_net
 ###Settings#############################################################################################################
-sim_dir_name = "2D Room - Triangulation" #Which dataset to run
+sim_dir_name = "2D Unit Square - Triangulation" #Which dataset to run
 process_mode = "Static"
 
 n_points_used_for_dynamics = 2000 #How many points are available from which to infer dynamics
@@ -87,6 +88,21 @@ print_process(intrinsic_process, indexs=points_dynamics_plot_index, bounding_sha
 #plt.savefig(full_dir_name + '/' + 'intrinsic_base.png', bbox_inches='tight')
 
 print_process(noisy_sensor, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Observed Space")
+
+fig = plt.figure()
+ax = fig.gca()
+ax.scatter(intrinsic_process[0, :], intrinsic_process[1, :], c=noisy_sensor[0, :])
+plt.title("Sensor 1")
+
+fig = plt.figure()
+ax = fig.gca()
+ax.scatter(intrinsic_process[0, :], intrinsic_process[1, :], c=noisy_sensor[1, :])
+plt.title("Sensor 2")
+
+fig = plt.figure()
+ax = fig.gca()
+ax.scatter(intrinsic_process[0, :], intrinsic_process[1, :], c=noisy_sensor[2, :])
+plt.title("Sensor 3")
 #plt.savefig(full_dir_name + '/' + 'sensor_base.png', bbox_inches='tight')
 
 #print_dynamics(intrinsic_process_base, intrinsic_process_step, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Intrinsic Process Dynamics")
@@ -129,7 +145,7 @@ n_points_used_for_clusters = intrinsic_process_clusters.shape[1]
 
 color_map_clusters = color_map[points_used_for_clusters_indexs, :]
 
-#test_ml(noisy_sensor_clusters, intrinsic_process_clusters, n_neighbors=n_neighbors_mds, n_components=dim_intrinsic, color=color_map_clusters)
+test_ml(noisy_sensor_clusters, intrinsic_process_clusters, n_neighbors=n_neighbors_mds, n_components=dim_intrinsic, color=color_map_clusters)
 
 
 #metric_list_net_tangent, metric_list_net_intrinsic = get_metrics_from_net(non_local_tangent_net_instance, noisy_sensor_clusters)
@@ -154,7 +170,7 @@ else:
 
 print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Tangent Jacobians", scale=0.0005, space_mode=True, elipse=True, color_map=color_map_clusters)
 
-print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Intrinsic Jacobians", scale=intrinsic_variance, space_mode=False, elipse=True, color_map=color_map_clusters)
+print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Intrinsic Jacobians", scale=36*intrinsic_variance, space_mode=False, elipse=True, color_map=color_map_clusters)
 
 #plt.show(block=True)
 

@@ -55,6 +55,23 @@ intrinsic_variance = 0.1
 bounding_shape = BoundingShape( vertices=[(7.7, 15.6), (7.7, -3.96), (-4, -3.96), (-4, 0), (-8, 0), (-8, 5.4), (-11.15, 5.4),
               (-11.15, 13.5), (-6.35, 13.5), (-6.35, 10.85), (0.05, 10.85), (0.05, 15.6)])
 '''
+
+'''
+sim_dir_name = "2D Room - Triangulation"
+process_mode = "Static"
+intrinsic_variance = 0.1
+bounding_shape = BoundingShape( vertices=[(7.7, 15.6), (7.7, -3.96), (-4, -3.96), (-4, 0), (-8, 0), (-8, 5.4), (-11.15, 5.4),
+              (-11.15, 13.5), (-6.35, 13.5), (-6.35, 10.85), (0.05, 10.85), (0.05, 15.6)])
+'''
+'''
+sim_dir_name = "3D Room - Triangulation"
+process_mode = "Static"
+intrinsic_variance = 0.1
+bounding_shape = BoundingShape( vertices=[(7.7, 15.6), (7.7, -3.96), (-4, -3.96), (-4, 0), (-8, 0), (-8, 5.4), (-11.15, 5.4),
+              (-11.15, 13.5), (-6.35, 13.5), (-6.35, 10.85), (0.05, 10.85), (0.05, 15.6)])
+added_dim_limits = numpy.asarray([[0., 6.]]).T
+'''
+
 '''
 sim_dir_name = "2D Unit Square - Triangulation"
 process_mode = "Static"
@@ -62,10 +79,17 @@ intrinsic_variance = 0.05**2
 bounding_shape = BoundingShape( vertices=[(0, 0), (1, 0), (1, 1), (0, 1)])
 '''
 
-sim_dir_name = "2D Room - Triangulation"
+sim_dir_name = "2D Unit Circle - Fishbowl"
 process_mode = "Static"
-intrinsic_variance = 0.1**2
-bounding_shape = BoundingShape( vertices=[(2.4, 0.5), (2.4, 1.13), (1, 1.13), (1, 3.15), (0.3, 3.15), (0.3,5.2), (1.4, 5),(1.4,4.2), (3.7,4.2), (3.7,6.1), (15.3, 6.1), (15.3, 4.1), (14.1, 4.1), (14.1, 2), (15.25, 2), (15.25, 0.5), (10.4, 0.5), (10.4, 4.25), (6.2, 4.25), (6.2, 0.5)])
+intrinsic_variance = 0.05**2
+bounding_shape = BoundingShape(predef_type="2D Unit Circle")
+
+
+
+#sim_dir_name = "2D Room - Non Convex - Triangulation"
+#process_mode = "Static"
+#intrinsic_variance = 0.1**2
+#bounding_shape = BoundingShape( vertices=[(2.4, 0.5), (2.4, 1.13), (1, 1.13), (1, 3.15), (0.3, 3.15), (0.3,5.2), (1.4, 5),(1.4,4.2), (3.7,4.2), (3.7,6.1), (15.3, 6.1), (15.3, 4.1), (14.1, 4.1), (14.1, 2), (15.25, 2), (15.25, 0.5), (10.4, 0.5), (10.4, 4.25), (6.2, 4.25), (6.2, 0.5)])
 #added_dim_limits = numpy.asarray([[0., 6.]]).T
 
 '''
@@ -150,12 +174,12 @@ numpy.save(sim_dir + '/' + intrinsic_variance_file_name, intrinsic_variance)
 numpy.save(sim_dir + '/' + dist_potential_file_name, dist_potential)
 
 color_map = create_color_map(intrinsic_simulated_process)
-n_plot_points = 5000
+n_plot_points = 10000
 n_plot_points = min(n_points_simulated, n_plot_points)
 points_plot_index = numpy.random.choice(n_points_simulated, size=n_plot_points, replace=False)
 print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Process", color_map=color_map)
-color_map[numpy.where(dist_potential<0.2), :] = [1, 0, 0]
-color_map[numpy.where(dist_potential>0.2), :] = 1
+color_map[numpy.where(dist_potential<0.3), :] = [0, 0, 0]
+color_map[numpy.where(dist_potential>0.3), :] = color_map[numpy.where(dist_potential>0.3), :]
 print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Process", color_map=color_map)
 
 plt.show(block=True)

@@ -6,7 +6,8 @@ from DataGeneration import BoundingShape, ItoGenerator, print_process, create_co
 import matplotlib.pyplot as plt
 from ObservationModes import *
 
-sim_dir_name = "2D Room - Triangulation"
+sim_dir_name = "2D Unit Square - Triangulation"
+
 intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
 
@@ -26,9 +27,21 @@ n_points = intrinsic_to_measure.shape[1]
 #ant_2 = numpy.asarray([[1.5], [1.5]])
 #ant_3 = numpy.asarray([[-0.5], [1.5]])
 
+'''
 measurement_variance = 0.
 exact_sensor = whole_sphere((intrinsic_to_measure-6)/5)/2
+'''
+'''
+measurement_variance = 0.
+ant_1 = numpy.asarray([[12.], [17.], [1.]])
+ant_2 = numpy.asarray([[-15], [7.], [3.]])
+ant_3 = numpy.asarray([[-4.], [-7.5], [5.]])
 
+range_factor = [[2], [2], [2]]
+antenas = numpy.concatenate((ant_1, ant_2, ant_3), axis=1)
+amplitudes = [[2],[2],[2]]
+exact_sensor = antena(intrinsic_to_measure, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
+'''
 '''
 measurement_variance = 0.
 ant_1 = numpy.asarray([[12.], [17.]])
@@ -41,10 +54,8 @@ amplitudes = [[2],[2],[2]]
 exact_sensor = antena(intrinsic_to_measure, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
 '''
 
-
-'''
-measurement_variance = 0.0000001
-ant_1 = numpy.asarray([[1.], [1.]])
+measurement_variance = 0.
+ant_1 = numpy.asarray([[0.75], [0.75]])
 ant_2 = numpy.asarray([[-0.25], [0.75]])
 ant_3 = numpy.asarray([[0.75], [-0.25]])
 
@@ -52,7 +63,7 @@ range_factor = [[1], [1], [1]]
 antenas = numpy.concatenate((ant_1, ant_2, ant_3), axis=1)
 amplitudes = [[2],[2],[2]]
 exact_sensor = antena(intrinsic_to_measure, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
-'''
+
 
 #exact_sensor_base = twirl(intrinsic_process_base, k=0.3)
 #exact_sensor_step = twirl(intrinsic_process_step, k=0.3)
