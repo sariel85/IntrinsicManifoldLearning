@@ -3,8 +3,8 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import matplotlib.pyplot as plt
-from DataGeneration import BoundingShape, ItoGenerator, print_process, create_color_map, bounding_potential
-from Util import  print_potential
+from data_generation import BoundingShape, ItoGenerator, print_process, create_color_map, bounding_potential
+from util import print_potential
 import numpy
 import os
 import pickle

@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
-from DataGeneration import print_process, create_color_map
+from data_generation import print_process, create_color_map
 import numpy
 import matplotlib.pyplot as plt
 

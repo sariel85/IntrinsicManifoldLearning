@@ -7,7 +7,7 @@ from TCIE_helpers import multiscale_isomaps
 
 from non_local_tangent import non_local_tangent_net
 ###Settings#############################################################################################################
-sim_dir_name = "2D Unit Square - Triangulation" #Which dataset to run
+sim_dir_name = "2D Unit Circle - Static - Fishbowl" #Which dataset to run
 process_mode = "Static"
 
 n_points_used_for_dynamics = 2000 #How many points are available from which to infer dynamics
@@ -36,21 +36,12 @@ dim_measurement = noisy_sensor_measured.shape[0]
 n_points = intrinsic_process.shape[1]
 
 
-if process_mode=="Static":
+if process_mode == "Static":
     noisy_sensor = noisy_sensor_measured[:, ::(dim_intrinsic+1)]
-elif process_mode=="Dynamic":
+elif process_mode == "Dynamic":
     noisy_sensor = noisy_sensor_measured[:, ::2]
 else:
     assert(0)
-
-#measurement_variance = 0.000001
-
-
-#ts = time.time()
-#ts = round(ts)
-#dir_name = '/{}'.format(ts)
-#full_dir_name = './' + 'Runs' + '/' + sim_dir_name + dir_name
-#os.makedirs(full_dir_name)
 
 noisy_sensor_mean = noisy_sensor.mean()
 noisy_sensor = (noisy_sensor - noisy_sensor_mean)
@@ -86,10 +77,10 @@ points_dynamics_plot_index = numpy.random.choice(n_points, size=n_points_used_fo
 color_map = create_color_map(intrinsic_process)
 
 print_process(intrinsic_process, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Intrinsic Space")
-#plt.savefig(full_dir_name + '/' + 'intrinsic_base.png', bbox_inches='tight')
 
 print_process(noisy_sensor, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Observed Space")
 
+'''
 fig = plt.figure()
 ax = fig.gca()
 ax.scatter(intrinsic_process[0, :], intrinsic_process[1, :], c=noisy_sensor[0, :])
@@ -104,6 +95,8 @@ fig = plt.figure()
 ax = fig.gca()
 ax.scatter(intrinsic_process[0, :], intrinsic_process[1, :], c=noisy_sensor[2, :])
 plt.title("Sensor 3")
+'''
+
 #plt.savefig(full_dir_name + '/' + 'sensor_base.png', bbox_inches='tight')
 
 #print_dynamics(intrinsic_process_base, intrinsic_process_step, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Intrinsic Process Dynamics")
@@ -112,10 +105,6 @@ plt.title("Sensor 3")
 #print_dynamics(noisy_sensor_base, noisy_sensor_step, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Observed Process Dynamics")
 #plt.savefig(full_dir_name + '/' + 'sensor_dynamics.png', bbox_inches='tight')
 
-###Intrinsic Metric Learning Net########################################################################################
-#non_local_tangent_net_instance = non_local_tangent_net(intrinsic_process_base, dim_measurements=dim_measurement, dim_intrinsic=dim_intrinsic, n_hidden_tangent=n_hidden_tangent,  n_hidden_int=n_hidden_int, intrinsic_variance=intrinsic_variance, measurement_variance=measurement_variance)
-#non_local_tangent_net_instance.train_net(noisy_sensor_base, noisy_sensor_step)
-########################################################################################################################
 
 #Testing and comparison with other methods##############################################################################
 n_points_used_for_clusters = min(n_points, n_points_used_for_clusters)
@@ -143,37 +132,30 @@ else:
 
 n_points_used_for_clusters = intrinsic_process_clusters.shape[1]
 
-
 color_map_clusters = color_map[points_used_for_clusters_indexs, :]
 
-test_ml(noisy_sensor_clusters, intrinsic_process_clusters, n_neighbors=n_neighbors_mds, n_components=dim_intrinsic, color=color_map_clusters)
+#test_ml(noisy_sensor_clusters, intrinsic_process_clusters, n_neighbors=n_neighbors_mds, n_components=dim_intrinsic, color=color_map_clusters)
 
-
+###Intrinsic Metric Learning Net########################################################################################
+##non_local_tangent_net_instance = non_local_tangent_net(intrinsic_process_base, dim_measurements=dim_measurement, dim_intrinsic=dim_intrinsic, n_hidden_tangent=n_hidden_tangent,  n_hidden_int=n_hidden_int, intrinsic_variance=intrinsic_variance, measurement_variance=measurement_variance)
+#non_local_tangent_net_instance.train_net(noisy_sensor_base, noisy_sensor_step)
 #metric_list_net_tangent, metric_list_net_intrinsic = get_metrics_from_net(non_local_tangent_net_instance, noisy_sensor_clusters)
-
 #net_drift = get_drift_from_net(non_local_tangent_net_instance, noisy_sensor_clusters)
-
-
-
 #print_drift(noisy_sensor_clusters, net_drift, titleStr="Net Learned Drift")
-
 #print_metrics(noisy_sensor_clusters, metric_list_net_tangent, intrinsic_dim=dim_intrinsic, titleStr="Net Learned Tangent Space", scale=intrinsic_variance*0.1, space_mode=False)
-
 #print_metrics(noisy_sensor_clusters, metric_list_net_intrinsic, intrinsic_dim=dim_intrinsic, titleStr="Net Learned Intrinsic Jacobians", scale=intrinsic_variance, space_mode=False)
+########################################################################################################################
 
-if process_mode=="Static":
+if process_mode == "Static":
     metric_list_def, metric_list_full = get_metrics_from_points_static(noisy_sensor_measured, dim_intrinsic, intrinsic_variance, measurement_variance)
 else:
-    noisy_sensor_base = noisy_sensor_measured [:, ::2]
-    noisy_sensor_step = noisy_sensor_measured [:, 1::2]
+    noisy_sensor_base = noisy_sensor_measured[:, ::2]
+    noisy_sensor_step = noisy_sensor_measured[:, 1::2]
     metric_list_def, metric_list_full = get_metrics_from_points(noisy_sensor_clusters, noisy_sensor_base, noisy_sensor_step, n_neighbors_cov, dim_intrinsic, intrinsic_variance, measurement_variance)
 
-
 print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Tangent Jacobians", scale=0.0005, space_mode=True, elipse=True, color_map=color_map_clusters)
-
 print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Learned Intrinsic Jacobians", scale=36*intrinsic_variance, space_mode=False, elipse=True, color_map=color_map_clusters)
 
-#plt.show(block=True)
 
 
 dist_mat_true_squared = calc_dist(intrinsic_process_clusters)
@@ -229,7 +211,7 @@ dist_mat_true = dist_mat_true[points_used_for_clusters_indexs_2, :][:,points_use
 #dist_mat_net_intrinsic_geo = dist_mat_net_intrinsic_geo[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 
 dist_mat_local_trimmed = trim_distances(dist_mat_local_geo, n_neighbors=n_neighbors_mds)
-dist_mat_local_trimmed_topo = trim_distances_topo(trim_distances(dist_mat_local_geo, n_neighbors=n_neighbors_mds) , dist_potential=dist_potential_2, radius_trim=0.4, intrinsic_process=intrinsic_process_clusters_2)
+#dist_mat_local_trimmed_topo = trim_distances_topo(trim_distances(dist_mat_local_geo, n_neighbors=n_neighbors_mds) , dist_potential=dist_potential_2, radius_trim=0.4, intrinsic_process=intrinsic_process_clusters_2)
 
 #dist_mat_local_trimmed = dist_mat_local_trimmed[n_points_used_for_clusters_indexs_2, :][:,n_points_used_for_clusters_indexs_2]
 #dist_mat_net_intrinsic_trimmed = trim_distances(dist_mat_net_intrinsic_geo, dist_mat_true, n_neighbors=n_neighbors_mds)
@@ -243,7 +225,8 @@ mds = manifold.MDS(n_components=2, max_iter=2000, eps=1e-5, dissimilarity="preco
 
 iso_embedding_local = intrinsic_isomaps(dist_mat_local_geo, dist_mat_local_trimmed, dim_intrinsic, intrinsic_process_clusters_2)
 iso_embedding_local = mds.fit(dist_mat_local_geo).embedding_
-iso_embedding_local_topo = mds.fit((1/2)*(dist_mat_local_trimmed_topo+dist_mat_local_trimmed_topo.T), weight=(dist_mat_local_trimmed_topo!=0).astype(int)).embedding_
+
+#iso_embedding_local_topo = mds.fit((1/2)*(dist_mat_local_trimmed_topo+dist_mat_local_trimmed_topo.T), weight=(dist_mat_local_trimmed_topo!=0).astype(int)).embedding_
 
 iso_embedding_net_intrinsic = intrinsic_isomaps(dist_mat_net_intrinsic_geo, dist_mat_net_intrinsic_trimmed, dim_intrinsic, intrinsic_process_clusters_2)
 iso_embedding_true_sp = mds.fit(dist_mat_true_geo).embedding_
