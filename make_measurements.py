@@ -6,17 +6,18 @@ from DataGeneration import BoundingShape, ItoGenerator, print_process, create_co
 import matplotlib.pyplot as plt
 from ObservationModes import *
 
-sim_dir_name = "2D Unit Square - Triangulation"
-
+sim_dir_name = "2D Unit circle - Static - Fishbowl"
 intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
-
-
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
-
 intrinsic_to_measure = numpy.loadtxt(sim_dir + '/' + 'intrinsic_process_to_measure.txt', delimiter=',').T
-
 n_points = intrinsic_to_measure.shape[1]
+
+
+#sim_dir_name = "2D Unit circle - Static - Fishbowl"
+exact_sensor = whole_sphere(intrinsic_to_measure, k=5)
+measurement_variance = 0
+
 
 # Noiseless Measurement
 #exact_sensor_base = twirl(intrinsic_process_base, k=6)
@@ -54,6 +55,7 @@ amplitudes = [[2],[2],[2]]
 exact_sensor = antena(intrinsic_to_measure, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
 '''
 
+'''
 measurement_variance = 0.
 ant_1 = numpy.asarray([[0.75], [0.75]])
 ant_2 = numpy.asarray([[-0.25], [0.75]])
@@ -63,7 +65,7 @@ range_factor = [[1], [1], [1]]
 antenas = numpy.concatenate((ant_1, ant_2, ant_3), axis=1)
 amplitudes = [[2],[2],[2]]
 exact_sensor = antena(intrinsic_to_measure, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
-
+'''''
 
 #exact_sensor_base = twirl(intrinsic_process_base, k=0.3)
 #exact_sensor_step = twirl(intrinsic_process_step, k=0.3)

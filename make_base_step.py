@@ -4,8 +4,9 @@ from __future__ import print_function
 from __future__ import absolute_import
 from DataGeneration import print_process, create_color_map
 import numpy
+import matplotlib.pyplot as plt
 
-sim_dir_name = "2D Unit Square - Triangulation"
+sim_dir_name = "2D Small Room - Static - Camera"
 process_mode = "Static"
 
 #sim_dir_name = "2D Room - Exact Limits - More Points - No Override"
@@ -18,7 +19,7 @@ intrinsic_simulated_process = numpy.load(sim_dir + '/' + intrinsic_process_file_
 intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=numpy.float64)
 dist_potential = numpy.load(sim_dir + '/' + 'dist_potential.npy').astype(dtype=numpy.float64)
 
-n_points_used = 1000000
+n_points_used = 1e10
 
 n_points = intrinsic_simulated_process.shape[1]
 
@@ -76,3 +77,5 @@ else:
 numpy.savetxt(sim_dir + '/' + 'dist_potential_used.txt', dist_potential_to_use, delimiter=',')
 numpy.savetxt(sim_dir + '/' + 'intrinsic_used.txt', intrinsic_points_to_use.T, delimiter=',')
 numpy.savetxt(sim_dir + '/' + 'intrinsic_process_to_measure.txt', intrinsic_process_to_measure.T, delimiter=',')
+
+plt.show(block=True)

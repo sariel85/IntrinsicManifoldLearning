@@ -9,89 +9,81 @@ import numpy
 import os
 import pickle
 
+intrinsic_process_file_name = 'intrinsic_process'
+intrinsic_variance_file_name = 'intrinsic_variance'
+dist_potential_file_name = 'dist_potential'
+
 
 added_dim_limits = None
-'''
-sim_dir_name = "2D Ring Potential"
-k = 0.005
-alpha = 0.005
-beta = 20
-intrinsic_variance = 0.002
-def potential_func (point): return ((1/2)*k*numpy.power(numpy.linalg.norm(point), 4)+alpha*numpy.exp(-beta*(numpy.linalg.norm(point))))
-print_potential(potential_func, x_low=-1, x_high=1, y_low=-1, y_high=1, step=0.05)
-'''
+n_points_simulated = 5000
 
-'''
-intrinsic_variance = 0.0005
-sim_dir_name = "2D Unit Circle"
-bounding_shape = BoundingShape(predef_type="2D Unit Circle")
-'''
+precision = 'float64'
+subsample_factor = 10
 
-'''
-sim_dir_name = "2D Double Gaussian Potential"
-intrinsic_variance = 0.002
-p1 = (-0.5, 0)
-p2 = (0.5, 0)
-alpha = 0.002
-beta = 2.5
-def potential_func (point): return -alpha*(numpy.exp(-beta*numpy.square(numpy.linalg.norm(point.T-numpy.asarray(p1).T)))+numpy.exp(-beta*numpy.square(numpy.linalg.norm(point.T-numpy.asarray(p2).T))))
-'''
-
-'''
-sim_dir_name = "2D Triple Gaussian Potential"
-p1 = (-0.5, 0-0.4)
-p2 = (0.5, 0-0.4)
-p3 = (0, 0.866-0.4)
-alpha = 0.0002
-beta = 2.5
-def potential_func (point): return -alpha*(numpy.exp(-beta*numpy.square(numpy.linalg.norm(point.T-numpy.asarray(p1).T)))+numpy.exp(-beta*numpy.square(numpy.linalg.norm(point.T-numpy.asarray(p2).T)))+numpy.exp(-beta*numpy.square(numpy.linalg.norm(point.T-numpy.asarray(p3).T))))
-sim_dir_name = "2D Triple Gaussian "
+n_plot_points = 10000
+boundary_threshold = 0.2
 
 
-
-sim_dir_name = "2D Room - Video"
+sim_dir_name = "2D Small Room - Static - Camera"
 process_mode = "Static"
-intrinsic_variance = 0.1
-bounding_shape = BoundingShape( vertices=[(7.7, 15.6), (7.7, -3.96), (-4, -3.96), (-4, 0), (-8, 0), (-8, 5.4), (-11.15, 5.4),
-              (-11.15, 13.5), (-6.35, 13.5), (-6.35, 10.85), (0.05, 10.85), (0.05, 15.6)])
+intrinsic_variance = 0.1**2
+bounding_shape = BoundingShape(vertices=[(2.4, 0), (2.4, 1.13), (1, 1.13), (1, 3.15), (0, 3.15), (0, 6), (3, 6), (3, 4.2), (4.2, 4.2), (4.2, 6), (7.5, 6), (7.5, 0), (7.5, 0)])
+boundary_threshold = 0.2
+
+
+'''
+sim_dir_name = "2D Non Convex Room - Static - Camera"
+process_mode = "Static"
+intrinsic_variance = 0.1**2
+bounding_shape = BoundingShape(vertices=[(2.4, 0), (2.4, 1.13), (1, 1.13), (1, 3.15), (0, 3.15), (0, 6), (3, 6), (3, 4.2), (4.2, 4.2), (4.2, 6), (15, 6), (15, 4.1), (14.1, 4.1), (14.1, 2), (15, 2), (15, 0), (10.4, 0), (10.4, 3), (7.5, 3), (7.5, 0)])
+boundary_threshold = 0.2
 '''
 
 '''
-sim_dir_name = "2D Room - Triangulation"
+sim_dir_name = "3D Small Room"
 process_mode = "Static"
-intrinsic_variance = 0.1
-bounding_shape = BoundingShape( vertices=[(7.7, 15.6), (7.7, -3.96), (-4, -3.96), (-4, 0), (-8, 0), (-8, 5.4), (-11.15, 5.4),
-              (-11.15, 13.5), (-6.35, 13.5), (-6.35, 10.85), (0.05, 10.85), (0.05, 15.6)])
-'''
-'''
-sim_dir_name = "3D Room - Triangulation"
-process_mode = "Static"
-intrinsic_variance = 0.1
-bounding_shape = BoundingShape( vertices=[(7.7, 15.6), (7.7, -3.96), (-4, -3.96), (-4, 0), (-8, 0), (-8, 5.4), (-11.15, 5.4),
-              (-11.15, 13.5), (-6.35, 13.5), (-6.35, 10.85), (0.05, 10.85), (0.05, 15.6)])
+intrinsic_variance = 0.1**2
+bounding_shape = BoundingShape(vertices=[(2.4, 0), (2.4, 1.13), (1, 1.13), (1, 3.15), (0, 3.15), (0, 6), (3, 6), (3, 4.2), (4.2, 4.2), (4.2, 6), (7.5, 6), (7.5, 0), (7.5, 0)])
 added_dim_limits = numpy.asarray([[0., 6.]]).T
+boundary_threshold = 0.2
 '''
 
 '''
-sim_dir_name = "2D Unit Square - Triangulation"
+sim_dir_name = "3D Non Convex Room"
+process_mode = "Static"
+intrinsic_variance = 0.1**2
+bounding_shape = BoundingShape(vertices=[(2.4, 0), (2.4, 1.13), (1, 1.13), (1, 3.15), (0, 3.15), (0, 6), (3, 6), (3, 4.2), (4.2, 4.2), (4.2, 6), (7.5, 6), (7.5, 0), (7.5, 0)])
+added_dim_limits = numpy.asarray([[0., 6.]]).T
+boundary_threshold = 0.2
+'''
+
+'''
+sim_dir_name = "2D Unit Square"
 process_mode = "Static"
 intrinsic_variance = 0.05**2
-bounding_shape = BoundingShape( vertices=[(0, 0), (1, 0), (1, 1), (0, 1)])
+bounding_shape = BoundingShape(vertices=[(0, 0), (1, 0), (1, 1), (0, 1)])
+boundary_threshold = 0.
 '''
 
-sim_dir_name = "2D Unit Circle - Fishbowl"
+'''
+sim_dir_name = "2D Unit Circle - Static - Fishbowl"
+process_mode = "Static"
+intrinsic_variance = 0.01**2
+n_legs = 24
+r = 0.5
+bounding_shape = BoundingShape(vertices=[(numpy.cos(2*numpy.pi/n_legs*x)*r, numpy.sin(2*numpy.pi/n_legs*x)*r) for x in range(0, n_legs+1)])
+boundary_threshold = 0.03
+'''
+
+'''
+sim_dir_name = "Non Convex"
 process_mode = "Static"
 intrinsic_variance = 0.05**2
-bounding_shape = BoundingShape(predef_type="2D Unit Circle")
+bounding_shape = BoundingShape(vertices=[(0, 0), (1, 0), (1, 0.33), (0.33, 0.33), (0.33, 0.66), (1, 0.66), (1, 1), (0, 1)])
+boundary_threshold = 0.03
+'''
 
-
-
-#sim_dir_name = "2D Room - Non Convex - Triangulation"
-#process_mode = "Static"
-#intrinsic_variance = 0.1**2
-#bounding_shape = BoundingShape( vertices=[(2.4, 0.5), (2.4, 1.13), (1, 1.13), (1, 3.15), (0.3, 3.15), (0.3,5.2), (1.4, 5),(1.4,4.2), (3.7,4.2), (3.7,6.1), (15.3, 6.1), (15.3, 4.1), (14.1, 4.1), (14.1, 2), (15.25, 2), (15.25, 0.5), (10.4, 0.5), (10.4, 4.25), (6.2, 4.25), (6.2, 0.5)])
-#added_dim_limits = numpy.asarray([[0., 6.]]).T
-
+# Not in use
 '''
 sim_dir_name = "2D Water Molecule"
 r = 0.7
@@ -107,37 +99,6 @@ def potential_func (point): return -scale*(alpha1*numpy.exp(-beta*numpy.square(n
 '''
 
 '''
-intrinsic_variance = 0.0001
-sim_dir_name = "2D Unit Square"
-bounding_shape = BoundingShape(predef_type="2D Unit Square")
-print_potential(potential_func, x_low=-1, x_high=1, y_low=-1, y_high=1, step=0.05)
-'''
-
-'''
-intrinsic_variance = 0.0001
-sim_dir_name = "2D Unit Circle"
-bounding_shape = BoundingShape(predef_type="2D Unit Circle")
-print_potential(potential_func, x_low=-1, x_high=1, y_low=-1, y_high=1, step=0.05)
-'''
-
-'''
-intrinsic_variance = 0.001
-sim_dir_name = "Rectangle"
-bounding_shape = BoundingShape(predef_type="2D Unit Square")
-print_potential(potential_func, x_low=-1, x_high=1, y_low=-1, y_high=1, step=0.05)
-'''
-
-'''
-sim_dir_name = "Non Convex"
-intrinsic_variance = 0.001
-bounding_shape = BoundingShape( vertices=[(0,0), (1, 0), (1, 0.33), (0.33, 0.33), (0.33, 0.66), (1, 0.66), (1, 1), (0, 1)])
-def potential_func (point):
-    bounding_shape = BoundingShape(vertices=[(7.7, 15.6), (7.7, -3.96), (-6.3, -3.96), (-6.3, -2.54), (-9.30, -2.54), (-9.30, 8.4), (-11.15, 8.4), (-11.15, 11.95), (-9.35, 11.95), (-9.35, 10.85), (0.05, 10.85), (0.05, 15.6)])
-    return bounding_potential(point, bounding_shape)
-    print_potential(potential_func, x_low=-18, x_high=18, y_low=-13, y_high=25, step=0.2)
-'''
-
-'''
 sim_dir_name = "Triangle"
 intrinsic_variance = 0.001
 bounding_shape = BoundingShape( vertices=[(0,0), (0.5, 1), (1, 1)])
@@ -147,9 +108,15 @@ def potential_func (point):
     print_potential(potential_func, x_low=-18, x_high=18, y_low=-13, y_high=25, step=0.2)
 '''
 
-intrinsic_process_file_name = 'intrinsic_process'
-intrinsic_variance_file_name = 'intrinsic_variance'
-dist_potential_file_name = 'dist_potential'
+'''
+sim_dir_name = "2D Ring Potential"
+k = 0.005
+alpha = 0.005
+beta = 20
+intrinsic_variance = 0.002
+def potential_func (point): return ((1/2)*k*numpy.power(numpy.linalg.norm(point), 4)+alpha*numpy.exp(-beta*(numpy.linalg.norm(point))))
+print_potential(potential_func, x_low=-1, x_high=1, y_low=-1, y_high=1, step=0.05)
+'''
 
 sim_dir = './' + sim_dir_name
 
@@ -158,10 +125,6 @@ if not(os.path.isdir(sim_dir)):
 
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
 
-# Intrinsic process properties
-precision = 'float64'
-n_points_simulated = 10000
-subsample_factor = 10
 
 #ito_generator = ItoGenerator(intrinsic_potential=potential_func, dim_intrinsic=2, bounding_shape=None)
 
@@ -174,13 +137,11 @@ numpy.save(sim_dir + '/' + intrinsic_variance_file_name, intrinsic_variance)
 numpy.save(sim_dir + '/' + dist_potential_file_name, dist_potential)
 
 color_map = create_color_map(intrinsic_simulated_process)
-n_plot_points = 10000
 n_plot_points = min(n_points_simulated, n_plot_points)
 points_plot_index = numpy.random.choice(n_points_simulated, size=n_plot_points, replace=False)
-print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Process", color_map=color_map)
-color_map[numpy.where(dist_potential<0.3), :] = [0, 0, 0]
-color_map[numpy.where(dist_potential>0.3), :] = color_map[numpy.where(dist_potential>0.3), :]
-print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Process", color_map=color_map)
-
+print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Space", color_map=color_map)
+color_map[numpy.where(dist_potential < boundary_threshold), :] = [0, 0, 0]
+color_map[numpy.where(dist_potential > boundary_threshold), :] = color_map[numpy.where(dist_potential > boundary_threshold), :]
+print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Space + Boundaries", color_map=color_map)
 plt.show(block=True)
 
