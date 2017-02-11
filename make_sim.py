@@ -23,16 +23,16 @@ subsample_factor = 10
 n_plot_points = 10000
 boundary_threshold = 0.2
 
-
+'''
 sim_dir_name = "2D Small Room - Static - Camera"
 process_mode = "Static"
 intrinsic_variance = 0.1**2
 bounding_shape = BoundingShape(vertices=[(2.4, 0), (2.4, 1.13), (1, 1.13), (1, 3.15), (0, 3.15), (0, 6), (3, 6), (3, 4.2), (4.2, 4.2), (4.2, 6), (7.5, 6), (7.5, 0), (7.5, 0)])
 boundary_threshold = 0.2
-
+'''
 
 '''
-sim_dir_name = "2D Non Convex Room - Static - Camera"
+sim_dir_name = "2D Non Convex Room - Static - Camera - 1"
 process_mode = "Static"
 intrinsic_variance = 0.1**2
 bounding_shape = BoundingShape(vertices=[(2.4, 0), (2.4, 1.13), (1, 1.13), (1, 3.15), (0, 3.15), (0, 6), (3, 6), (3, 4.2), (4.2, 4.2), (4.2, 6), (15, 6), (15, 4.1), (14.1, 4.1), (14.1, 2), (15, 2), (15, 0), (10.4, 0), (10.4, 3), (7.5, 3), (7.5, 0)])
@@ -75,13 +75,12 @@ bounding_shape = BoundingShape(vertices=[(numpy.cos(2*numpy.pi/n_legs*x)*r, nump
 boundary_threshold = 0.03
 '''
 
-'''
 sim_dir_name = "Non Convex"
 process_mode = "Static"
 intrinsic_variance = 0.05**2
 bounding_shape = BoundingShape(vertices=[(0, 0), (1, 0), (1, 0.33), (0.33, 0.33), (0.33, 0.66), (1, 0.66), (1, 1), (0, 1)])
 boundary_threshold = 0.03
-'''
+
 
 # Not in use
 '''

@@ -38,7 +38,7 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
 
         clusters_ind = clusters[i_point]
 
-        knn_indexes = numpy.argsort(dist_mat[mu[i_point], clusters_ind], kind='quicksort')
+        #knn_indexes = numpy.argsort(dist_mat[mu[i_point], clusters_ind], kind='quicksort')
 
         n_neighbors_start = clusters_ind.__len__()
         n_neighbors_step = 50
@@ -75,7 +75,7 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
             iso_embedding = mds.fit(dist_mat_sub, init=eigen_vect.T).embedding_.T
 
             mds = manifold.MDS(n_components=2, max_iter=2000, eps=1e-5, dissimilarity="precomputed", n_jobs=1, n_init=1)
-            iso_embedding_no_geo = mds.fit(dist_mat_trimmed_sub, init=eigen_vect.T, weight=(dist_mat_trimmed_sub!=0)).embedding_.T
+            iso_embedding_no_geo = mds.fit(dist_mat_trimmed_sub, init=eigen_vect.T, weight=(dist_mat_trimmed_sub != 0)).embedding_.T
 
             expl = numpy.sum(eigen_val[:dim_intrinsic])
             res = numpy.sum(eigen_val[dim_intrinsic:])
@@ -164,13 +164,6 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
 
     fig = plt.figure()
     ax = fig.gca()
-    ax.scatter(iso_embedding[0, :], iso_embedding[1, :], c="k")
-    ax.scatter(iso_embedding[0, :], iso_embedding[1, :], c='r')
-    ax.scatter(iso_embedding[0, 0], iso_embedding[1, 0], c='g')
-    plt.axis('equal')
-
-    fig = plt.figure()
-    ax = fig.gca()
     ax.scatter(iso_embedding_no_geo[0, :], iso_embedding_no_geo[1, :], c="k")
     ax.scatter(iso_embedding_no_geo[0, :], iso_embedding_no_geo[1, :], c='r')
     ax.scatter(iso_embedding_no_geo[0, 0], iso_embedding_no_geo[1, 0], c='g')
@@ -186,6 +179,8 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
     plt.axis('equal')
 
     plt.show(block=False)
+
+    return iso_embedding_no_geo
 
 def cluster_points(X, mu_ind):
     cluster_sizes = numpy.zeros(mu_ind.shape)
@@ -216,19 +211,17 @@ def reevaluate_centers(mu_ind, clusters_ind, X):
     return knn_indexes[:, 0]
 
 def has_converged(mu_ind, oldmu_ind, X):
-    oldmu = X[oldmu_ind, :]
-    mu = X[mu_ind, :]
     return (set(mu_ind) == set(oldmu_ind))
 
-def find_centers(X, K_Final):
-    K = K_Final*4
+def find_centers(X, k_Final):
+    k = k_Final*8
 
-    X=X.T
+    X = X.T
     # Initialize to K random centers
 
-    mu_ind = numpy.random.choice(X.shape[0], size=K, replace=False)
+    mu_ind = numpy.random.choice(X.shape[0], size=k, replace=False)
 
-    while mu_ind.shape[0]>K_Final:
+    while mu_ind.shape[0]>k_Final:
 
         oldmu_ind = numpy.random.choice(X.shape[0], size=mu_ind.shape[0], replace=False)
 

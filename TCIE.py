@@ -2,11 +2,10 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import absolute_import
-from DataGeneration import print_process, create_color_map
+from data_generation import print_process, create_color_map
 import matplotlib.pyplot as plt
-import numpy, numpy.random
-from DataGeneration import print_process, create_color_map, print_dynamics
-from Util import *
+import numpy
+from util import *
 from TCIE_helpers import multiscale_isomaps
 
 n_points = 1200

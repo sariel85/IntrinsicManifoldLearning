@@ -2,21 +2,28 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
-from DataGeneration import BoundingShape, ItoGenerator, print_process, create_color_map
+from data_generation import BoundingShape, ItoGenerator, print_process, create_color_map
 import matplotlib.pyplot as plt
-from ObservationModes import *
+from observation_modes import *
 
-sim_dir_name = "2D Unit circle - Static - Fishbowl"
+sim_dir_name = "Non Convex"
 intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
 intrinsic_to_measure = numpy.loadtxt(sim_dir + '/' + 'intrinsic_process_to_measure.txt', delimiter=',').T
 n_points = intrinsic_to_measure.shape[1]
+n_plot_points = 1200
 
 
 #sim_dir_name = "2D Unit circle - Static - Fishbowl"
-exact_sensor = whole_sphere(intrinsic_to_measure, k=5)
-measurement_variance = 0
+#exact_sensor = whole_sphere(intrinsic_to_measure, k=5)
+#measurement_variance = 0
+
+
+# sim_dir_name = "Non Convex"
+exact_sensor = swissroll(intrinsic_to_measure, k=6)
+measurement_variance = 0.00000**2
+
 
 
 # Noiseless Measurement
@@ -87,7 +94,6 @@ numpy.savetxt(sim_dir + '/' + 'sensor_noisy.txt', noisy_sensor.T, delimiter=',')
 
 numpy.save(sim_dir + '/' + 'measurement_variance', measurement_variance)
 
-n_plot_points = 1000
 n_plot_points = min(n_points, n_plot_points)
 points_plot_index = numpy.random.choice(n_points, size=n_plot_points, replace=False)
 
