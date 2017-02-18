@@ -15,7 +15,7 @@ dist_potential_file_name = 'dist_potential'
 
 
 added_dim_limits = None
-n_points_simulated = 5000
+n_points_simulated = 100000
 
 precision = 'float64'
 subsample_factor = 10
@@ -57,31 +57,56 @@ added_dim_limits = numpy.asarray([[0., 6.]]).T
 boundary_threshold = 0.2
 '''
 
-'''
-sim_dir_name = "2D Unit Square"
-process_mode = "Static"
-intrinsic_variance = 0.05**2
-bounding_shape = BoundingShape(vertices=[(0, 0), (1, 0), (1, 1), (0, 1)])
-boundary_threshold = 0.
-'''
 
-'''
-sim_dir_name = "2D Unit Circle - Static - Fishbowl"
-process_mode = "Static"
-intrinsic_variance = 0.01**2
+#sim_dir_name = "2D Unit Square"
+#sim_dir_name = "2D Unit Square - Dynamic"
+#process_mode = "Dynamic"
+#intrinsic_variance = 0.03**2
+#bounding_shape = BoundingShape(vertices=[(0, 0), (1, 0), (1, 1), (0, 1)])
+#boundary_threshold = 0.
+
+
+
+sim_dir_name = "2D Unit Circle - Dynamic - Fishbowl"
+process_mode = "Dynamic"
+intrinsic_variance = 0.02**2
 n_legs = 24
 r = 0.5
 bounding_shape = BoundingShape(vertices=[(numpy.cos(2*numpy.pi/n_legs*x)*r, numpy.sin(2*numpy.pi/n_legs*x)*r) for x in range(0, n_legs+1)])
 boundary_threshold = 0.03
+
+
+#sim_dir_name = "Non Convex"
+#process_mode = "Static"
+#intrinsic_variance = 0.05**2
+#bounding_shape = BoundingShape(vertices=[(0, 0), (1, 0), (1, 0.33), (0.33, 0.33), (0.33, 0.66), (1, 0.66), (1, 1), (0, 1)])
+#boundary_threshold = 0.03
+
+#Generate Data Set
+#sim_dir_name = "Non Convex"
+#process_mode = "Static"
+#intrinsic_variance = 0.05**2
+
 '''
+x_width = 1
+y_width = 3
+hole_start_x = 0.25
+hole_start_y = 1.25
+hole_width_x = 0.5
+hole_width_y = 1.25
 
-sim_dir_name = "Non Convex"
-process_mode = "Static"
-intrinsic_variance = 0.05**2
-bounding_shape = BoundingShape(vertices=[(0, 0), (1, 0), (1, 0.33), (0.33, 0.33), (0.33, 0.66), (1, 0.66), (1, 1), (0, 1)])
-boundary_threshold = 0.03
-
-
+intrinsic_points = numpy.zeros((2, n_points_simulated))
+intrinsic_points = intrinsic_points.T
+for i_point in range(n_points_simulated):
+    while 1:
+        test_point = numpy.asarray([numpy.random.rand()*x_width, numpy.random.rand()*y_width])
+        if not((test_point[0] > hole_start_x) and (test_point[0] < (hole_start_x + hole_width_x)) and (test_point[1] > hole_start_y) and (test_point[1] < hole_start_y + hole_width_y)):
+            break
+        #break
+    intrinsic_points[i_point, :] = test_point
+intrinsic_points = intrinsic_points.T
+intrinsic_simulated_process = intrinsic_points
+'''
 # Not in use
 '''
 sim_dir_name = "2D Water Molecule"
@@ -139,8 +164,8 @@ color_map = create_color_map(intrinsic_simulated_process)
 n_plot_points = min(n_points_simulated, n_plot_points)
 points_plot_index = numpy.random.choice(n_points_simulated, size=n_plot_points, replace=False)
 print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Space", color_map=color_map)
-color_map[numpy.where(dist_potential < boundary_threshold), :] = [0, 0, 0]
-color_map[numpy.where(dist_potential > boundary_threshold), :] = color_map[numpy.where(dist_potential > boundary_threshold), :]
+#color_map[numpy.where(dist_potential < boundary_threshold), :] = [0, 0, 0]
+#color_map[numpy.where(dist_potential > boundary_threshold), :] = color_map[numpy.where(dist_potential > boundary_threshold), :]
 print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Space + Boundaries", color_map=color_map)
 plt.show(block=True)
 

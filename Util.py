@@ -126,6 +126,7 @@ def print_potential(func, x_low=-0.25, x_high=0.25, y_low=-0.25, y_high=0.25, st
 def embbeding_score(ground_truth, embedding, titleStr, n_points = 200):
     ground_truth = ground_truth[:, :n_points]
     embedding = embedding[:, :n_points]
+    n_points = ground_truth.shape[1]
     dist_mat_ground_truth = scipy.spatial.distance.cdist(ground_truth.T, ground_truth.T)
     dist_mat_embedding = scipy.spatial.distance.cdist(embedding.T, embedding.T)
     stress = numpy.sqrt(numpy.sum(numpy.square(dist_mat_ground_truth-dist_mat_embedding)))
@@ -261,8 +262,8 @@ def get_metrics_from_points_static(noisy_sensor_measured, dim_intrinsic, intrins
         s_def[dim_intrinsic:] = float('Inf')
         s_def = 1 / s_def
 
-        if s_def[dim_intrinsic:] < numpy.finfo(numpy.float64).eps:
-            s_full[dim_intrinsic:] = numpy.max(numpy.finfo(numpy.float64).eps, measurement_variance)
+        #if s_def[dim_intrinsic:] < numpy.finfo(numpy.float64).eps:
+        s_full[dim_intrinsic:] = numpy.max(numpy.finfo(numpy.float64).eps, measurement_variance)
 
         s_full = 1 / s_full
         cov_list_def[i_cluster] = numpy.dot(U, numpy.dot(numpy.diag(s_def), V))
@@ -373,91 +374,90 @@ def calc_diff_map(dist_mat, dims=2, factor=2):
     row_sum = numpy.sum(diff_kernal, axis=1)
     normlized_kernal = numpy.dot(numpy.diag(1 / row_sum), diff_kernal)
     U, S, V = numpy.linalg.svd(normlized_kernal)
-    return U[:, 1:dims+1]
+    return U[:, 1:dims+1].T
 
-def print_metrics(noisy_sensor_clusters, metric_list_full, intrinsic_dim, titleStr, scale, space_mode, elipse, color_map):
-    metric_list = []
-    n_metrics_to_print = 200
+def print_metrics(noisy_sensor_clusters, metric_list_full, intrinsic_dim, titleStr, scale, space_mode, elipse, color_map, points_used_for_clusters_indexs):
 
-    n_points = noisy_sensor_clusters.shape[1]
+    if noisy_sensor_clusters.shape[0] == 3:
+        metric_list = []
 
-    n_points_used_for_clusters = min(n_points, n_metrics_to_print)
-    points_used_for_clusters_indexs = numpy.random.choice(n_points, size=n_points_used_for_clusters, replace=False)
+        noisy_sensor_clusters = numpy.copy(noisy_sensor_clusters[:, points_used_for_clusters_indexs])
+        for i_point in range(points_used_for_clusters_indexs.shape[0]):
+            metric_list.append(metric_list_full[points_used_for_clusters_indexs[i_point]])
 
-    noisy_sensor_clusters = numpy.copy(noisy_sensor_clusters[:, points_used_for_clusters_indexs])
-    for i_point in range(n_points_used_for_clusters):
-        metric_list.append(metric_list_full[points_used_for_clusters_indexs[i_point]])
+        color_map = color_map[points_used_for_clusters_indexs, :]
+        fig = plt.figure()
+        ax = fig.gca(projection='3d', aspect='equal')
 
-    color_map = color_map[points_used_for_clusters_indexs, :]
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-
-    n_points = noisy_sensor_clusters.shape[1]
+        n_points = noisy_sensor_clusters.shape[1]
 
 
-    if space_mode is True:
-        for i_point in range(0, n_points):
-            metric = metric_list[i_point]
-            center = noisy_sensor_clusters[:, i_point]
+        if space_mode is True:
+            for i_point in range(0, n_points):
+                metric = metric_list[i_point]
+                center = noisy_sensor_clusters[:, i_point]
 
-            if elipse:
-                U, s, rotation = numpy.linalg.svd(metric)
-                # now carry on with EOL's answer
-                u = numpy.linspace(0.0, 2.0 * numpy.pi, 12)
-                v = numpy.linspace(0.0, numpy.pi, 6)
-                x = int(s[0]>1e-10)*numpy.outer(numpy.cos(u), numpy.sin(v))
-                y = int(s[1]>1e-10)*numpy.outer(numpy.sin(u), numpy.sin(v))
-                z = (int(s[2]>1e-10)+1e-5)*numpy.outer(numpy.ones_like(u), numpy.cos(v))
-                for i in range(x.shape[0]):
-                    for j in range(x.shape[1]):
-                        [x[i, j], y[i, j], z[i, j]] = numpy.dot([x[i, j], y[i, j], z[i, j]], numpy.sqrt(scale)*rotation) + center
+                if elipse:
+                    U, s, rotation = numpy.linalg.svd(metric)
+                    # now carry on with EOL's answer
+                    u = numpy.linspace(0.0, 2.0 * numpy.pi, 12)
+                    v = numpy.linspace(0.0, numpy.pi, 6)
+                    x = int(s[0]>1e-10)*numpy.outer(numpy.cos(u), numpy.sin(v))/3
+                    y = int(s[1]>1e-10)*numpy.outer(numpy.sin(u), numpy.sin(v))/3
+                    z = (int(s[2]>1e-10)+1e-5)*numpy.outer(numpy.ones_like(u), numpy.cos(v))/3
+                    for i in range(x.shape[0]):
+                        for j in range(x.shape[1]):
+                            [x[i, j], y[i, j], z[i, j]] = numpy.dot([x[i, j], y[i, j], z[i, j]], numpy.sqrt(scale)*rotation) + center
 
-                ax.plot_wireframe(x, y, z, rstride=1, cstride=1, color=color_map[i_point], alpha=1)
-            else:
-                [u, s, v] = numpy.linalg.svd(metric)
-                u = numpy.dot(u[:, 0:intrinsic_dim], numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
-                sign = numpy.sign(u[0, 0])
-                ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                          noisy_sensor_clusters[2, i_point], sign*u[0, 0], sign*u[1, 0], sign*u[2, 0],
-                          length=3*numpy.sqrt(scale), pivot='tail')
-                sign = numpy.sign(u[0, 1])
-                ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                          noisy_sensor_clusters[2, i_point], sign*u[0, 1], sign*u[1, 1], sign*u[2, 1],
-                          length=3*numpy.sqrt(scale), pivot='tail')
+                    ax.plot_wireframe(x, y, z, rstride=1, cstride=1, color=color_map[i_point], alpha=1)
 
-    else:
+                else:
+                    [u, s, v] = numpy.linalg.svd(metric)
+                    u = numpy.dot(u[:, 0:intrinsic_dim], numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
+                    sign = numpy.sign(u[0, 0])
+                    ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
+                              noisy_sensor_clusters[2, i_point], sign*u[0, 0], sign*u[1, 0], sign*u[2, 0],
+                              length=3*numpy.sqrt(scale), pivot='tail')
+                    sign = numpy.sign(u[0, 1])
+                    ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
+                              noisy_sensor_clusters[2, i_point], sign*u[0, 1], sign*u[1, 1], sign*u[2, 1],
+                              length=3*numpy.sqrt(scale), pivot='tail')
 
-        for i_point in range(0, n_points):
-            metric = metric_list[i_point]
-            center = noisy_sensor_clusters[:, i_point]
+        else:
 
-            if elipse:
-                U, s, rotation = numpy.linalg.svd(metric)
-                radii = (1.0 / numpy.sqrt(s))/3
-                radii[intrinsic_dim:] = 0
-                # now carry on with EOL's answer
-                u = numpy.linspace(0.0, 2.0 * numpy.pi, 12)
-                v = numpy.linspace(0.0, numpy.pi, 6)
-                x = radii[0] * numpy.outer(numpy.cos(u), numpy.sin(v))
-                y = radii[1] * numpy.outer(numpy.sin(u), numpy.sin(v))
-                z = radii[2] * numpy.outer(numpy.ones_like(u), numpy.cos(v))
-                for i in range(x.shape[0]):
-                    for j in range(x.shape[1]):
-                        [x[i, j], y[i, j], z[i, j]] = numpy.dot([x[i, j], y[i, j], z[i, j]], numpy.sqrt(scale)*rotation) + center
+            for i_point in range(0, n_points):
+                metric = metric_list[i_point]
+                center = noisy_sensor_clusters[:, i_point]
 
-                ax.plot_wireframe(x, y, z, rstride=1, cstride=1, color=color_map[i_point], alpha=1)
-            else:
-                [u, s, v] = numpy.linalg.svd(metric)
-                u = numpy.dot(u[:, 0:intrinsic_dim], numpy.sqrt(scale)*numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
-                sign = numpy.sign(u[0, 0])
-                ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                          noisy_sensor_clusters[2, i_point], sign*u[0, 0], sign*u[1, 0], sign*u[2, 0],
-                          length=numpy.linalg.norm(u[:, 0]), pivot='tail')
-                sign = numpy.sign(u[0, 1])
-                ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
-                          noisy_sensor_clusters[2, i_point], sign*u[0, 1], sign*u[1, 1], sign*u[2, 1],
-                          length=numpy.linalg.norm(u[:, 1]), pivot='tail')
-    ax.set_title(titleStr)
+                if elipse:
+                    U, s, rotation = numpy.linalg.svd(metric)
+                    radii = (1.0 / numpy.sqrt(s))/3
+                    radii[intrinsic_dim:] = 0
+                    # now carry on with EOL's answer
+                    u = numpy.linspace(0.0, 2.0 * numpy.pi, 12)
+                    v = numpy.linspace(0.0, numpy.pi, 6)
+                    x = radii[0] * numpy.outer(numpy.cos(u), numpy.sin(v))
+                    y = radii[1] * numpy.outer(numpy.sin(u), numpy.sin(v))
+                    z = radii[2] * numpy.outer(numpy.ones_like(u), numpy.cos(v))
+                    for i in range(x.shape[0]):
+                        for j in range(x.shape[1]):
+                            [x[i, j], y[i, j], z[i, j]] = numpy.dot([x[i, j], y[i, j], z[i, j]], numpy.sqrt(scale)*rotation) + center
+
+                    ax.plot_wireframe(x, y, z, rstride=1, cstride=1, color=color_map[i_point], alpha=1)
+
+                else:
+                    [u, s, v] = numpy.linalg.svd(metric)
+                    u = numpy.dot(u[:, 0:intrinsic_dim], numpy.sqrt(scale)*numpy.diag(numpy.sqrt(1/s[:intrinsic_dim])))
+                    sign = numpy.sign(u[0, 0])
+                    ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
+                              noisy_sensor_clusters[2, i_point], sign*u[0, 0], sign*u[1, 0], sign*u[2, 0],
+                              length=numpy.linalg.norm(u[:, 0]), pivot='tail')
+                    sign = numpy.sign(u[0, 1])
+                    ax.quiver(noisy_sensor_clusters[0, i_point], noisy_sensor_clusters[1, i_point],
+                              noisy_sensor_clusters[2, i_point], sign*u[0, 1], sign*u[1, 1], sign*u[2, 1],
+                              length=numpy.linalg.norm(u[:, 1]), pivot='tail')
+        ax.set_title(titleStr)
+        plt.show(block=False)
 
 def print_drift(noisy_sensor_clusters, drift, titleStr):
 

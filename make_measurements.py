@@ -6,7 +6,7 @@ from data_generation import BoundingShape, ItoGenerator, print_process, create_c
 import matplotlib.pyplot as plt
 from observation_modes import *
 
-sim_dir_name = "Non Convex"
+sim_dir_name = "2D Unit Circle - Dynamic - Fishbowl"
 intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
@@ -15,14 +15,14 @@ n_points = intrinsic_to_measure.shape[1]
 n_plot_points = 1200
 
 
-#sim_dir_name = "2D Unit circle - Static - Fishbowl"
-#exact_sensor = whole_sphere(intrinsic_to_measure, k=5)
-#measurement_variance = 0
+sim_dir_name = "2D Unit circle - Static - Fishbowl"
+exact_sensor = whole_sphere(intrinsic_to_measure, k=5)
+measurement_variance = 0.00001
 
 
-# sim_dir_name = "Non Convex"
-exact_sensor = swissroll(intrinsic_to_measure, k=6)
-measurement_variance = 0.00000**2
+#sim_dir_name = "Non Convex"
+#exact_sensor = swissroll(intrinsic_to_measure, k=4)
+#measurement_variance = 0.00**2
 
 
 
@@ -35,15 +35,16 @@ measurement_variance = 0.00000**2
 #ant_2 = numpy.asarray([[1.5], [1.5]])
 #ant_3 = numpy.asarray([[-0.5], [1.5]])
 
+
+#measurement_variance = 0.
+#exact_sensor = whole_sphere((intrinsic_to_measure-6)/5)/2
+'''
+'''
 '''
 measurement_variance = 0.
-exact_sensor = whole_sphere((intrinsic_to_measure-6)/5)/2
-'''
-'''
-measurement_variance = 0.
-ant_1 = numpy.asarray([[12.], [17.], [1.]])
-ant_2 = numpy.asarray([[-15], [7.], [3.]])
-ant_3 = numpy.asarray([[-4.], [-7.5], [5.]])
+ant_1 = numpy.asarray([[0.], [0.]])
+ant_2 = numpy.asarray([[0.], [8.]])
+ant_3 = numpy.asarray([[5.], [7]])
 
 range_factor = [[2], [2], [2]]
 antenas = numpy.concatenate((ant_1, ant_2, ant_3), axis=1)
@@ -51,16 +52,8 @@ amplitudes = [[2],[2],[2]]
 exact_sensor = antena(intrinsic_to_measure, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
 '''
 '''
-measurement_variance = 0.
-ant_1 = numpy.asarray([[12.], [17.]])
-ant_2 = numpy.asarray([[-15], [7.]])
-ant_3 = numpy.asarray([[-4.], [-7.5]])
-
-range_factor = [[2], [2], [2]]
-antenas = numpy.concatenate((ant_1, ant_2, ant_3), axis=1)
-amplitudes = [[2],[2],[2]]
-exact_sensor = antena(intrinsic_to_measure, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
 '''
+
 
 '''
 measurement_variance = 0.

@@ -7,7 +7,7 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
 
     n_points = dist_mat.shape[0]
 
-    n_clusters = 5
+    n_clusters = 1
     sigma = 0.2
     t = 10
 
@@ -85,6 +85,7 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
 
             n_neighbors_list.append(n_neighbors)
 
+            ''''
             fig = plt.figure()
             ax = fig.gca()
             ax.scatter(eigen_vect[0, :], eigen_vect[1, :], c="k")
@@ -117,7 +118,8 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
 
             plt.figure()
             plt.plot(numpy.asarray(n_neighbors_list), numpy.asarray(rank_check_list))
-
+            plt.show(block=False)
+            '''
             n_neighbors = n_neighbors + n_neighbors_step
 
             dist_new_sub = scipy.spatial.distance.cdist(iso_embedding_no_geo.T, iso_embedding_no_geo.T, metric='euclidean', p=2, V=None, VI=None, w=None)
@@ -148,13 +150,12 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
                                    weight=(dist_mat_trimmed != 0)).embedding_.T
 
     expl = numpy.sum(eigen_val[:dim_intrinsic])
-    res = numpy.sum(eigen_val[dim_intrinsic:])
-    # dis = (D_sub_trust_original*wgt).sum()
-    # check = (stress2/dis)
+
     rank_check_list.append(dim_intrinsic * eigen_val[dim_intrinsic] / expl)
 
     n_neighbors_list.append(n_neighbors)
 
+    '''
     fig = plt.figure()
     ax = fig.gca()
     ax.scatter(eigen_vect[0, :], eigen_vect[1, :], c="k")
@@ -169,16 +170,8 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
     ax.scatter(iso_embedding_no_geo[0, 0], iso_embedding_no_geo[1, 0], c='g')
     plt.axis('equal')
 
-    fig = plt.figure()
-    ax = fig.gca()
-    ax.scatter(intrinsic_points[0, :], intrinsic_points[1, :], c="k")
-    for j_point in clusters_ind:
-        ax.scatter(intrinsic_points[0, j_point], intrinsic_points[1, j_point], c='r')
-    ax.scatter(intrinsic_points[0, mu[i_point]],
-               intrinsic_points[1, mu[i_point]], c='g')
-    plt.axis('equal')
-
     plt.show(block=False)
+    '''
 
     return iso_embedding_no_geo
 

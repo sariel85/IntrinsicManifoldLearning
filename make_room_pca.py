@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing
 import cv2
 
-sim_dir_name = "2D Non Convex"
+sim_dir_name = "2D Non Convex Room - Static - Camera - 1"
 sim_dir = './' + sim_dir_name
-video_file = sim_dir + '/' + 'new_vid.avi'
+video_file = sim_dir + '/' + 'video.avi'
 
 cap = cv2.VideoCapture(video_file)
 
@@ -64,7 +64,7 @@ while True:
 #numpy.savetxt(sim_dir + '/' + 'movie_mat.txt', movie_frames, delimiter=',')
 #movie_frames = numpy.loadtxt(sim_dir + '/' + 'movie_mat.txt', delimiter=',')
 
-n_pca = 7000
+n_pca = 15000
 pca = PCA(n_components=3, whiten=False)
 pca.fit(movie_frames[0:n_pca, :])
 pca_base = pca.components_
@@ -79,10 +79,8 @@ pca_base = numpy.loadtxt(sim_dir + '/' + 'pca_vects.txt', delimiter=',')
 movie_pca = numpy.dot(numpy.linalg.pinv(pca_base.T), (movie_frames-numpy.mean(movie_frames.T, 1)).T)
 
 min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
-movie_pca = min_max_scaler.fit_transform(movie_pca.T).T
+sensor_noisy = min_max_scaler.fit_transform(movie_pca.T)
 
-
-sensor_noisy = movie_pca[:, numpy.arange(0, n_frames, 2)]
 numpy.savetxt(sim_dir + '/' + 'sensor_noisy.txt', sensor_noisy, delimiter=',')
 
 
