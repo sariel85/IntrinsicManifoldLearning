@@ -239,7 +239,7 @@ class non_local_tangent_net(object):
 
         b1 = momentum
         b2 = 0.01*momentum
-        e = 1e-12
+        e = 1e-8
         updates = []
         grads = T.grad(cost, params)
 
@@ -279,7 +279,7 @@ class non_local_tangent_net(object):
 
         b1 = momentum
         b2 = 0.01*momentum
-        e = 1e-12
+        e = 1e-8
         updates = []
         grads = T.grad(cost, params)
 
@@ -319,7 +319,7 @@ class non_local_tangent_net(object):
 
     def train_net(self, noisy_sensor_base, noisy_sensor_step):
         max_epoch_drift = 5000
-        max_epoch_tangent = 500
+        max_epoch_tangent = 5000
         max_epoch_int = 2000
 
         n_points = noisy_sensor_base.shape[1]
@@ -392,7 +392,7 @@ class non_local_tangent_net(object):
         ax.set_title("Cost vs Epochs - Stage I")
         plt.show(block=False)
 
-        learning_rate = theano.shared(1e-2)
+        learning_rate = theano.shared(1e-3)
         momentum = theano.shared(1.)
         #cost, cost_int, cost_drift= self.get_cost(self.input_base_Theano, self.input_step_Theano, self.input_coeff_Theano)
         updates = self.gradient_updates_momentum(cost, params, learning_rate, momentum)
@@ -403,13 +403,13 @@ class non_local_tangent_net(object):
         cost_term = []
         cost_term_valid = []
         iteration = 0
-        n_batch = 100
+        n_batch = 2000
         n_batch = min(n_batch, n_points)
 
         max_iteration_tangent = (n_points/n_batch)*max_epoch_tangent
 
         while iteration < max_iteration_tangent:
-            if iteration%100==0:
+            if iteration%1000==0:
                 for i_point in numpy.random.choice(n_points, size=(n_points), replace=False):
                     drift = self.get_drift_val(noisy_sensor_base[:, i_point].reshape((self.dim_measurements, 1)))[0,:]
                     jacobian = self.get_jacobian_val(noisy_sensor_base[:, i_point].reshape((self.dim_measurements, 1))+drift.T)[0,:,:]
@@ -421,7 +421,7 @@ class non_local_tangent_net(object):
             point_in_batch = numpy.random.choice(n_points, size=(n_batch), replace=False)
             current_cost = train(noisy_sensor_base[:, point_in_batch].reshape((self.dim_measurements, n_batch)).T, noisy_sensor_step[:, point_in_batch].reshape((self.dim_measurements, n_batch)).T, coeffs[:, point_in_batch].reshape((self.dim_intrinsic, n_batch)).T)
 
-            if iteration%100==0:
+            if iteration%1000==0:
                 for i_point in numpy.random.choice(n_valid_points, size=(n_valid_points), replace=False):
                     drift = self.get_drift_val(noisy_sensor_valid_base[:, i_point].reshape((self.dim_measurements, 1)))[0,:]
                     jacobian = self.get_jacobian_val(noisy_sensor_valid_base[:, i_point].reshape((self.dim_measurements, 1))+drift.T)[0,:,:]
