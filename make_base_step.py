@@ -6,7 +6,7 @@ from data_generation import print_process, create_color_map
 import numpy
 import matplotlib.pyplot as plt
 
-sim_dir_name = "2D Unit Circle - Dynamic - Fishbowl"
+sim_dir_name = "2D Unit Square - Dynamic"
 process_mode = "Dynamic"
 
 #sim_dir_name = "2D Room - Exact Limits - More Points - No Override"

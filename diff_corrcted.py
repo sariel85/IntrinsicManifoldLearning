@@ -10,12 +10,12 @@ from non_local_tangent import non_local_tangent_net
 sim_dir_name = "2D Unit Square - Dynamic"  #Which dataset to run
 process_mode = "Dynamic"
 
-n_points_used_for_dynamics = 5000 #How many points are available from which to infer dynamics
-n_points_used_for_plotting_dynamics = 1200
+n_points_used_for_dynamics = 3000 #How many points are available from which to infer dynamics
+n_points_used_for_plotting_dynamics = 2000
 n_metrics_to_print = 200
-n_points_used_for_clusters = 1000 #How many cluster to use in Kernal method
+n_points_used_for_clusters = 3000 #How many cluster to use in Kernal method
 
-n_neighbors_cov = 200 #How neighboors to use from which to infer dynamics locally
+n_neighbors_cov = 60 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 20 #How many short distances are kept for each cluster point
 n_hidden_drift = 4 #How many nodes in hidden layer that learns intrinsic dynamics
 n_hidden_tangent = 20 #How many nodes in hidden layer that learns tangent plane
@@ -140,7 +140,7 @@ metric_list_def, metric_list_full = get_metrics_from_points(noisy_sensor_cluster
 
 n_cluster_points = noisy_sensor_clusters.shape[1]
 distance_metrix = scipy.spatial.distance.cdist(noisy_sensor_clusters.T, noisy_sensor_base.T, metric='sqeuclidean')
-distance_metrix_full = scipy.spatial.distance.cdist(noisy_sensor_step.T, noisy_sensor_step.T, metric='sqeuclidean')
+distance_metrix_full = scipy.spatial.distance.cdist(noisy_sensor_step.T, noisy_sensor_base.T, metric='sqeuclidean')
 
 knn_indexes = numpy.argsort(distance_metrix, axis=1, kind='quicksort')
 knn_indexes = knn_indexes[:, :n_neighbors_cov]
@@ -164,7 +164,7 @@ for i_cluster in range(n_points_used_for_clusters):
     for j_point in range(n_neighbors_cov):
         cluster_map[i_cluster, knn_indexes[i_cluster, j_point]] = 1/n_neighbors_cov
 
-sigma = numpy.median(distance_metrix_full)/8
+sigma = numpy.median(distance_metrix_full)/50
 distance_metrix_full_kernel = numpy.exp(-distance_metrix_full/(2*(sigma)))
 row_sum = numpy.sum(distance_metrix_full_kernel, axis=1)
 normlized_kernal = numpy.dot(numpy.diag(1 / row_sum), distance_metrix_full_kernel)
@@ -175,13 +175,26 @@ cluster_map = (cluster_map.T - numpy.mean(cluster_map, axis=1).T).T
 fig = plt.figure()
 plt.imshow(cluster_map)
 plt.show(block=False)
+diff_distance_metrix = scipy.spatial.distance.cdist(cluster_map, cluster_map)
+diff_distance_metrix_trimmed = trim_distances(diff_distance_metrix, n_neighbors=n_neighbors_mds)
 
-kernel = numpy.dot(cluster_map, cluster_map.T)
-fig = plt.figure()
-plt.imshow(kernel)
-plt.show(block=False)
+diff_distance_metrix_trimmed_geo = scipy.sparse.csgraph.shortest_path(diff_distance_metrix_trimmed, directed=False)
 
-U, s, V = numpy.linalg.svd(kernel)
+#kernel = numpy.dot(cluster_map, cluster_map.T)
+#fig = plt.figure()
+#plt.imshow(kernel)
+#plt.show(block=False)
+
+D_squared = diff_distance_metrix_trimmed_geo ** 2
+
+# centering matrix
+n = D_squared.shape[0]
+J_c = 1. / n * (numpy.eye(n) - 1 + (n - 1) * numpy.eye(n))
+
+# perform double centering
+B = -0.5 * (J_c.dot(D_squared)).dot(J_c)
+
+U, s, V = numpy.linalg.svd(B)
 eigen_val = s
 eigen_vect = U.T
 eigen_val_sort_ind = numpy.argsort(-numpy.abs(eigen_val))
@@ -189,8 +202,8 @@ eigen_val = numpy.abs(eigen_val[eigen_val_sort_ind])
 
 eigen_vect = eigen_vect[eigen_val_sort_ind]
 eigen_vect = eigen_vect[:dim_intrinsic].T
-guess = numpy.real(numpy.dot(numpy.diag(numpy.sqrt(numpy.abs(eigen_val[:dim_intrinsic]))), eigen_vect.T).T)
+guess = numpy.real(numpy.dot(numpy.diag(numpy.sqrt(numpy.abs(eigen_val[:dim_intrinsic]))), eigen_vect.T).T)/numpy.sqrt(intrinsic_variance)
 
-print_process(guess.T, titleStr='Embeding')
+print_process(guess.T, titleStr='Embeding', color_map=color_map_clusters)
 print("Finish")
 plt.show(block=True)

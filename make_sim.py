@@ -59,21 +59,21 @@ boundary_threshold = 0.2
 
 
 #sim_dir_name = "2D Unit Square"
-#sim_dir_name = "2D Unit Square - Dynamic"
-#process_mode = "Dynamic"
-#intrinsic_variance = 0.03**2
-#bounding_shape = BoundingShape(vertices=[(0, 0), (1, 0), (1, 1), (0, 1)])
+sim_dir_name = "2D Unit Square - Dynamic"
+process_mode = "Dynamic"
+intrinsic_variance = 0.03**2
+bounding_shape = BoundingShape(vertices=[(0, 0), (2.3, 0), (2.3, 1), (0, 1)])
 #boundary_threshold = 0.
 
 
 
-sim_dir_name = "2D Unit Circle - Dynamic - Fishbowl"
-process_mode = "Dynamic"
-intrinsic_variance = 0.02**2
-n_legs = 24
-r = 0.5
-bounding_shape = BoundingShape(vertices=[(numpy.cos(2*numpy.pi/n_legs*x)*r, numpy.sin(2*numpy.pi/n_legs*x)*r) for x in range(0, n_legs+1)])
-boundary_threshold = 0.03
+#sim_dir_name = "2D Unit Circle - Dynamic - Fishbowl"
+#process_mode = "Dynamic"
+#intrinsic_variance = 0.02**2
+#n_legs = 24
+#r = 0.5
+#bounding_shape = BoundingShape(vertices=[(numpy.cos(2*numpy.pi/n_legs*x)*r, numpy.sin(2*numpy.pi/n_legs*x)*r) for x in range(0, n_legs+1)])
+#boundary_threshold = 0.03
 
 
 #sim_dir_name = "Non Convex"

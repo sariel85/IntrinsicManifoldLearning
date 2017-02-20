@@ -6,7 +6,7 @@ from data_generation import BoundingShape, ItoGenerator, print_process, create_c
 import matplotlib.pyplot as plt
 from observation_modes import *
 
-sim_dir_name = "2D Unit Circle - Dynamic - Fishbowl"
+sim_dir_name = "2D Unit Square - Dynamic"
 intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
@@ -15,14 +15,14 @@ n_points = intrinsic_to_measure.shape[1]
 n_plot_points = 1200
 
 
-sim_dir_name = "2D Unit circle - Static - Fishbowl"
-exact_sensor = whole_sphere(intrinsic_to_measure, k=5)
-measurement_variance = 0.00001
+#sim_dir_name = "2D Unit circle - Static - Fishbowl"
+#exact_sensor = whole_sphere(intrinsic_to_measure, k=5)
+#measurement_variance = 0.00001
 
 
 #sim_dir_name = "Non Convex"
-#exact_sensor = swissroll(intrinsic_to_measure, k=4)
-#measurement_variance = 0.00**2
+exact_sensor = swissroll(intrinsic_to_measure, k=0.)
+measurement_variance = 0.00**2
 
 
 
