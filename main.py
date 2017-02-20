@@ -10,7 +10,7 @@ from non_local_tangent import non_local_tangent_net
 sim_dir_name = "2D Unit Circle - Dynamic - Fishbowl"  #Which dataset to run
 process_mode = "Dynamic"
 
-n_points_used_for_dynamics = 500 #How many points are available from which to infer dynamics
+n_points_used_for_dynamics = 1000 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 1200
 n_points_used_for_metric_plot = 300
 n_points_used_for_clusters = 300 #How many cluster to use in Kernal method
@@ -19,8 +19,8 @@ n_points_used_for_clusters_2 = 300 #How many cluster to use in Kernal method
 n_neighbors_cov = 10 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 20 #How many short distances are kept for each cluster point
 n_hidden_drift = 6 #How many nodes in hidden layer that learns intrinsic dynamics
-n_hidden_tangent = 40 #How many nodes in hidden layer that learns tangent plane
-n_hidden_int = 10 #How many nodes in hidden layer that learns intrinsic dynamics
+n_hidden_tangent = 30 #How many nodes in hidden layer that learns tangent plane
+n_hidden_int = 30 #How many nodes in hidden layer that learns intrinsic dynamics
 ########################################################################################################################
 
 sim_dir = './' + sim_dir_name

@@ -257,7 +257,7 @@ class non_local_tangent_net(object):
         lr_t = learning_rate * (T.sqrt(fix2_fact) / fix1_fact)
         #lr_t = learning_rate * (1/ fix1_fact)
         for p, g in zip(params, grads):
-
+            g = T.clip(g, -5, 5)
             m = theano.shared(p.get_value() * 0.)
             v = theano.shared(p.get_value() * 0.)
             m_t = (b1 * g) + ((1. - b1) * m)
@@ -318,13 +318,13 @@ class non_local_tangent_net(object):
         return updates
 
     def train_net(self, noisy_sensor_base, noisy_sensor_step):
-        max_epoch_drift = 10000
+        max_epoch_drift = 20000
         max_epoch_tangent = 4000
         max_epoch_int = 4000
 
         n_points = noisy_sensor_base.shape[1]
 
-        n_valid_points = int(numpy.ceil(n_points*0.05))
+        n_valid_points = int(numpy.ceil(n_points*0.001))
 
         n_points = n_points - n_valid_points
 
