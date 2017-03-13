@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing
 import cv2
 
-sim_dir_name = "2D Non Convex Room - Static - Camera - 1"
+sim_dir_name = "3D Apartment - Static - Color"
 sim_dir = './' + sim_dir_name
-video_file = sim_dir + '/' + 'video.avi'
+video_file = sim_dir + '/' + 'measured_process.avi'
 
 cap = cv2.VideoCapture(video_file)
 
@@ -19,7 +19,7 @@ frame_hight = numpy.int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 frame_width = numpy.int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 n_pixels = numpy.int(3 * frame_hight * frame_width)
 
-movie_frames = numpy.empty([n_frames, 3*frame_hight*frame_width])
+movie_frames = None
 
 while not cap.isOpened():
     cap = cv2.VideoCapture(video_file)
@@ -28,21 +28,25 @@ while not cap.isOpened():
 
 pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
 
-kernel = numpy.ones((2,2),numpy.float32)/(2*2)
+smoothing_kernel_size = 17
+kernel = numpy.ones((smoothing_kernel_size, smoothing_kernel_size), numpy.float32)/(smoothing_kernel_size * smoothing_kernel_size)
 
 while True:
     flag, frame = cap.read()
     if flag:
         # The frame is ready and already captured
-        #cv2.imshow('video', frame)
-
-        dst = cv2.filter2D(numpy.asarray(frame[:, :, :]), -1, kernel)
-        #dst = dst[::4, :, :][:, ::4, :]
-        #plt.subplot(121), plt.imshow(numpy.asarray(frame[:, :, :])), plt.title('Original')
-        #plt.subplot(122), plt.imshow(dst), plt.title('Averaging')
+        frame_3 = numpy.concatenate((frame, frame, frame), axis=1)
+        dst = cv2.GaussianBlur(frame_3, (smoothing_kernel_size, smoothing_kernel_size), sigmaX=2, sigmaY=2, borderType=BORDER_REPLICATE)
+        dst = dst[:, frame_width:2*frame_width, :]
+        dst = dst[::2, :, :][:, ::2, :]
+        #plt.subplot(121), plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), interpolation='none'), plt.title('Original')
+        #plt.subplot(122), plt.imshow(cv2.cvtColor(dst, cv2.COLOR_BGR2RGB), interpolation='none'), plt.title('Averaging')
         #plt.show(block=False)
 
-        movie_frames[pos_frame, :] = numpy.asarray(dst).reshape([n_pixels])
+        if movie_frames is None:
+            movie_frames = numpy.empty([n_frames, dst.shape[0]*dst.shape[1]*dst.shape[2]])
+        else:
+            movie_frames[pos_frame, :] = numpy.asarray(dst).reshape([dst.shape[0]*dst.shape[1]*dst.shape[2]])
         pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
         print(str(pos_frame)+" frames")
     else:
@@ -64,9 +68,9 @@ while True:
 #numpy.savetxt(sim_dir + '/' + 'movie_mat.txt', movie_frames, delimiter=',')
 #movie_frames = numpy.loadtxt(sim_dir + '/' + 'movie_mat.txt', delimiter=',')
 
-n_pca = 15000
-pca = PCA(n_components=3, whiten=False)
-pca.fit(movie_frames[0:n_pca, :])
+n_pca = 40000
+pca = PCA(n_components=40, whiten=False)
+pca.fit(movie_frames[0:n_pca, :]-numpy.mean(movie_frames[0:n_pca, :], 0))
 pca_base = pca.components_
 explained_variance = pca.explained_variance_
 

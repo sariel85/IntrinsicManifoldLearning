@@ -130,8 +130,6 @@ class non_local_tangent_net(object):
 
         self.b_int_2 = theano.shared(value=numpy.zeros((self.n_hidden_int,), dtype=theano.config.floatX), name='b_int_2', borrow=True)
 
-        self.b_int_2 = theano.shared(value=numpy.zeros((self.n_hidden_int,), dtype=theano.config.floatX), name='b_int_2', borrow=True)
-
         #self.b_int_3 = theano.shared(value=numpy.zeros((self.dim_jacobian_int,), dtype=theano.config.floatX), name='b_int_3', borrow=True)
 
         self.b_int_3 = theano.shared(value=numpy.array([1., 0, 0, 1.], dtype=theano.config.floatX), name='b_int_3', borrow=True)

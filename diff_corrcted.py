@@ -25,6 +25,10 @@ n_hidden_int = 20 #How many nodes in hidden layer that learns intrinsic dynamics
 sim_dir = './' + sim_dir_name
 dtype = numpy.float64
 
+
+short_dist = short_dist + short_dist.T
+short_dist_full = scipy.sparse.csgraph.shortest_path(short_dist, directed=False)
+
 intrinsic_process = numpy.loadtxt(sim_dir + '/' + 'intrinsic_used.txt', delimiter=',', dtype=dtype).T
 noisy_sensor_measured = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy.txt', delimiter=',', dtype=dtype).T
 intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=dtype)

@@ -177,7 +177,7 @@ def antena(intrinsic_process, centers, amplitudes, range_factor):
 
     n_antenas = centers.shape[1]
 
-    observed_process = numpy.empty([n_antenas, intrinsic_process.shape[1]])
+    observed_process = numpy.zeros([n_antenas, intrinsic_process.shape[1]])
 
     assert intrinsic_process.shape[0] == centers.shape[0]
 

@@ -12,24 +12,28 @@ import pickle
 intrinsic_process_file_name = 'intrinsic_process'
 intrinsic_variance_file_name = 'intrinsic_variance'
 dist_potential_file_name = 'dist_potential'
+bounding_shape_file_name = 'bounding_shape'
 
 
 added_dim_limits = None
-n_points_simulated = 100000
+n_points_simulated = 10000
 
 precision = 'float64'
 subsample_factor = 10
 
-n_plot_points = 10000
+n_plot_points = 20000
 boundary_threshold = 0.2
 
-'''
-sim_dir_name = "2D Small Room - Static - Camera"
+
+sim_dir_name = "3D Apartment - Static - Color Camera2"
 process_mode = "Static"
-intrinsic_variance = 0.1**2
-bounding_shape = BoundingShape(vertices=[(2.4, 0), (2.4, 1.13), (1, 1.13), (1, 3.15), (0, 3.15), (0, 6), (3, 6), (3, 4.2), (4.2, 4.2), (4.2, 6), (7.5, 6), (7.5, 0), (7.5, 0)])
+intrinsic_variance = 0.065**2
+#bounding_shape = BoundingShape(vertices=[(2.4, 0), (2.4, 1.13), (0, 1.13), (0, 3.15), (0, 6), (3, 6), (3, 4.2), (4.2, 4.2), (4.2, 7), (7.5, 7), (7.5, 6), (8.5, 6), (8.5, 8.5), (13, 8.5), (13, 3), (11, 3), (11, 2.5), (13,2.5), (13,0), (9 ,0), (9 ,2.5), (9.5 ,2.5), (9.5 ,2.5),  (9.5, 3), (8.5, 4), (7.5, 4), (7.5, 0)])
+#bounding_shape = BoundingShape(vertices=[(2.4, 0), (2.4, 1.13), (0, 1.13), (0, 3.15), (0, 6), (3, 6), (3, 4.2), (4.2, 4.2), (4.2, 7), (7.5, 7), (7.5, 6), (8.5, 6), (8.5, 8.5), (13, 8.5), (13, 3), (11, 3), (11, 2.5), (13,2.5), (13,0), (9 ,0), (9 ,2.5), (9.5 ,2.5), (9.5 ,2.5),  (9.5, 3), (8.5, 4), (7.5, 4), (7.5, 0)])
+bounding_shape = BoundingShape(vertices=[(2.6, 0.2), (2.6, 1.33), (0.2, 1.33), (0.2, 3.25), (0.93, 3.25), (0.93, 5.11), (1.69, 5.11), (1.69, 4.87), (2.8, 4.87), (2.8, 4), (4.37, 4), (4.37, 6.3), (7.28, 6.3), (7.28, 5.82), (8.69, 5.82), (8.69, 8.25), (9.54, 8.25), (9.54, 4.65), (12.8, 4.65), (12.8, 3.18), (10.65, 3.18), (10.65, 2.3), (11.8, 2.3), (11.8, 0.2), (9.17, 0.2), (9.17, 2.3), (9.75, 2.3),  (9.75, 3.63), (8.52, 4.25), (7.28, 4.25), (7.28, 1.63), (4.69, 1.63), (4.69, 0.2)])
+added_dim_limits = numpy.asarray([[0.5, 2.5]]).T
 boundary_threshold = 0.2
-'''
+
 
 '''
 sim_dir_name = "2D Non Convex Room - Static - Camera - 1"
@@ -58,11 +62,11 @@ boundary_threshold = 0.2
 '''
 
 
-#sim_dir_name = "2D Unit Square"
-sim_dir_name = "2D Unit Square - Dynamic"
-process_mode = "Dynamic"
-intrinsic_variance = 0.03**2
-bounding_shape = BoundingShape(vertices=[(0, 0), (2.3, 0), (2.3, 1), (0, 1)])
+##sim_dir_name = "2D Unit Square"
+#sim_dir_name = "2D Unit Square - Dynamic"
+#process_mode = "Dynamic"
+#intrinsic_variance = 0.03**2
+#bounding_shape = BoundingShape(vertices=[(0, 0), (2.3, 0), (2.3, 1), (0, 1)])
 #boundary_threshold = 0.
 
 
@@ -159,6 +163,8 @@ intrinsic_simulated_process, dist_potential = ito_generator.gen_process(n_trajec
 numpy.save(sim_dir + '/' + intrinsic_process_file_name, intrinsic_simulated_process.T)
 numpy.save(sim_dir + '/' + intrinsic_variance_file_name, intrinsic_variance)
 numpy.save(sim_dir + '/' + dist_potential_file_name, dist_potential)
+numpy.save(sim_dir + '/' + bounding_shape_file_name, bounding_shape.vertices)
+numpy.savetxt(sim_dir + '/' + 'bounding_shape.txt', bounding_shape.vertices, delimiter=',')
 
 color_map = create_color_map(intrinsic_simulated_process)
 n_plot_points = min(n_points_simulated, n_plot_points)
@@ -166,6 +172,6 @@ points_plot_index = numpy.random.choice(n_points_simulated, size=n_plot_points, 
 print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Space", color_map=color_map)
 #color_map[numpy.where(dist_potential < boundary_threshold), :] = [0, 0, 0]
 #color_map[numpy.where(dist_potential > boundary_threshold), :] = color_map[numpy.where(dist_potential > boundary_threshold), :]
-print_process(intrinsic_simulated_process, bounding_shape=None, indexs=points_plot_index, titleStr="Intrinsic Space + Boundaries", color_map=color_map)
+#print_process(intrinsic_simulated_process, bounding_shape=bounding_shape, indexs=points_plot_index, titleStr="Intrinsic Space + Boundaries", color_map=color_map)
 plt.show(block=True)
 

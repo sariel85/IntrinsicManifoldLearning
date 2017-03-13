@@ -98,10 +98,14 @@ def print_process(input_process, indexs=None, bounding_shape=None, color_map=Non
                 polygon = Polygon(bounding_shape.vertices, fill=False)
                 ax.add_patch(polygon)
 
-
         if ax_limits is not None:
             ax.set_xlim([ax_limits[0], ax_limits[1]])
             ax.set_ylim([ax_limits[2], ax_limits[3]])
+        else:
+            x_size = numpy.max(process[0, :])-numpy.min(process[0, :])
+            y_size = numpy.max(process[1, :])-numpy.min(process[1, :])
+            ax.set_xlim([numpy.min(process[0, :])-0.1*x_size, numpy.max(process[0, :])+0.1*x_size])
+            ax.set_ylim([numpy.min(process[1, :])-0.1*y_size, numpy.max(process[1, :])+0.1*y_size])
 
         plt.title(titleStr)
         plt.show(block=False)
@@ -619,7 +623,7 @@ class ItoGenerator(object):
                 test_point_low = numpy.asarray(test_point)
 
                 if added_dim_limits is not None:
-                    added_cords = (numpy.random.rand(added_dim_limits.shape[1]) - added_dim_limits[0, :])*(added_dim_limits[1, :] - added_dim_limits[0, :])
+                    added_cords = (numpy.random.rand(added_dim_limits.shape[1]))*(added_dim_limits[1, :] - added_dim_limits[0, :]) + added_dim_limits[0, :]
                     test_point = numpy.append(test_point, added_cords)
                     d_added = numpy.min([added_cords - added_dim_limits[0, :], added_dim_limits[1, :] - added_cords])
                 else:

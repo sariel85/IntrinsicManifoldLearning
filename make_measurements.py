@@ -6,7 +6,7 @@ from data_generation import BoundingShape, ItoGenerator, print_process, create_c
 import matplotlib.pyplot as plt
 from observation_modes import *
 
-sim_dir_name = "2D Unit circle - Dynamic - Fishbowl"
+sim_dir_name = "2D Small Room - Static - Wifi"
 intrinsic_process_file_name = 'intrinsic_process.npy'
 sim_dir = './' + sim_dir_name
 intrinsic_process_file = sim_dir + '/' + intrinsic_process_file_name
@@ -16,8 +16,8 @@ n_plot_points = 1200
 
 
 #sim_dir_name = "2D Unit circle - Dynamic - Fishbowl"
-exact_sensor = whole_sphere(intrinsic_to_measure, k=5)
-measurement_variance = 0.01**2
+#exact_sensor = whole_sphere(intrinsic_to_measure, k=5)
+measurement_variance = 0.0**2
 
 
 #sim_dir_name = "Non Convex"
@@ -40,20 +40,26 @@ measurement_variance = 0.01**2
 #exact_sensor = whole_sphere((intrinsic_to_measure-6)/5)/2
 '''
 '''
-'''
+
 measurement_variance = 0.
-ant_1 = numpy.asarray([[0.], [0.]])
+ant_1 = numpy.asarray([[4.5], [2.]])
 ant_2 = numpy.asarray([[0.], [8.]])
 ant_3 = numpy.asarray([[5.], [7]])
 
-range_factor = [[2], [2], [2]]
+#range_factor = [[0.1], [0.1], [0.1]]
 antenas = numpy.concatenate((ant_1, ant_2, ant_3), axis=1)
-amplitudes = [[2],[2],[2]]
-exact_sensor = antena(intrinsic_to_measure, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
-'''
-'''
-'''
+#amplitudes = [[1],[1],[1]]
+#exact_sensor = antena(intrinsic_to_measure, centers=antenas, amplitudes=amplitudes, range_factor=range_factor)
 
+
+exact_sensor = numpy.zeros([3, intrinsic_to_measure.shape[1]])
+
+dist=(intrinsic_to_measure.T - antenas[:, 0].T).T
+dists = dist * dist
+dists = numpy.sqrt(numpy.sum(dists, axis=0))
+exact_sensor[0, :] = numpy.sinc(dists/2)/5
+exact_sensor[1, :] = intrinsic_to_measure[1,:]
+exact_sensor[2, :] = intrinsic_to_measure[0,:]
 
 '''
 measurement_variance = 0.
