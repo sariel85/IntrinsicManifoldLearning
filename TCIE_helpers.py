@@ -1,35 +1,48 @@
 import numpy
 import matplotlib.pyplot as plt
 import scipy
+
 from sklearn import manifold
 
 def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrinsic=2):
 
-    n_points = dist_mat.shape[0]
-
     n_clusters = 1
-    sigma = 0.2
-    t = 10
+    sigma = numpy.median(dist_mat[:])/30
+    t = 40
+    diff_embedding_dim = 300
 
     dist_mat_intrinsic = numpy.copy(dist_mat)
 
-    dist_mat_rbf = numpy.exp(-(dist_mat**2)/(2*sigma**2))
+    dist_mat_rbf = numpy.exp(-(dist_mat_intrinsic**2)/(2*(sigma**2)))
     row_sum = numpy.sum(dist_mat_rbf, axis=1)
-    col_sum = numpy.sum(dist_mat_rbf, axis=0)
-    transition_prob = numpy.dot(dist_mat_rbf, numpy.diag(1/row_sum))
-    transition_prob = numpy.dot(numpy.diag(1/col_sum), transition_prob)
+    transition_prob = numpy.dot(numpy.diag(1/row_sum), dist_mat_rbf)
+    #transition_prob = numpy.dot(numpy.diag(1/row_sum), transition_prob)
+    #U, S, V = numpy.linalg.svd(transition_prob)
+    #diff_embedding = numpy.dot(U[:, 1:diff_embedding_dim+1], numpy.sqrt(numpy.diag(S[1:diff_embedding_dim+1]**t)))
+    transition_prob[transition_prob < 1e-3] = 0
+    #Sa = scipy.sparse.coo_matrix(transition_prob)
     row_sum = numpy.sum(transition_prob, axis=1)
     transition_prob = numpy.dot(numpy.diag(1/row_sum), transition_prob)
-    U, S, V = numpy.linalg.svd(transition_prob)
-    diff_embedding = numpy.dot(U[:, 1:10], numpy.sqrt(numpy.diag(S[1:10]**t)))
-    diff_embedding = diff_embedding.T
-    (mu, clusters) = find_centers(diff_embedding, n_clusters)
+    row_sum = numpy.sum(transition_prob, axis=1)
+
+    Sa = scipy.sparse.coo_matrix(transition_prob)
+
+    list_nonzero = Sa.nonzero()
+    #diff_embedding = numpy.linalg.matrix_power(transition_prob, t)
+    #sA = sA**t
+
+    U, S, V = scipy.sparse.linalg.svds(Sa, k=diff_embedding_dim+1, ncv=None, tol=0, which='LM', v0=None, maxiter=None, return_singular_vectors=True)
+    diff_embedding = numpy.dot(U[:, 1:diff_embedding_dim+1], numpy.sqrt(numpy.diag(S[1:diff_embedding_dim+1]**t)))
+    #diff_embedding = numpy.array(diff_embedding.todense())
+    row_sum = numpy.sum(diff_embedding, axis=1)
+
+    (mu, clusters) = find_centers(diff_embedding, intrinsic_points, n_clusters)
 
     fig = plt.figure()
     ax = fig.gca()
     ax.scatter(intrinsic_points[0, :], intrinsic_points[1, :], c="k")
     for i_point in range(mu.shape[0]):
-        ax.scatter(intrinsic_points[0, clusters[i_point]], intrinsic_points[1, clusters[i_point]], color=numpy.random.rand(3,1))
+        ax.scatter(intrinsic_points[0, clusters[i_point]], intrinsic_points[1, clusters[i_point]], color=numpy.random.rand(3, 1))
         ax.scatter(intrinsic_points[0, mu[i_point]], intrinsic_points[1, mu[i_point]], c='r')
     plt.axis('equal')
     plt.show(block=False)
@@ -127,8 +140,8 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
 
     dist_mat_sub_squared = dist_mat_intrinsic ** 2
 
-    n_neighbors = dist_mat_sub_squared.shape[0
-    ]
+    n_neighbors = dist_mat_sub_squared.shape[0]
+
     # centering matrix
     J_c = 1. / n_neighbors * (numpy.eye(n_neighbors) - 1 + (n_neighbors - 1) * numpy.eye(n_neighbors))
 
@@ -179,7 +192,7 @@ def cluster_points(X, mu_ind):
     cluster_sizes = numpy.zeros(mu_ind.shape)
     clusters = {}
     dist = scipy.spatial.distance.cdist(X, X[mu_ind, :], metric='euclidean', p=2, V=None, VI=None, w=None)
-    knn_indexes = numpy.argsort(dist, kind='quicksort')
+    knn_indexes = numpy.argsort(dist, kind='quicksort', axis=1)
 
     for i_x in range(X.shape[0]):
         bestmukey = knn_indexes[i_x, 0]
@@ -193,8 +206,11 @@ def cluster_points(X, mu_ind):
 
     return clusters, cluster_sizes
 
+
 def reevaluate_centers(mu_ind, clusters_ind, X):
-    center = numpy.ones((mu_ind.shape[0], X.shape[1]))
+
+    center = numpy.empty((mu_ind.shape[0], X.shape[1]))
+    center[:] = numpy.NAN
     for i_center in range(mu_ind.size):
         center[i_center, :] = numpy.mean(X[clusters_ind[i_center], :], axis=0)
 
@@ -206,15 +222,15 @@ def reevaluate_centers(mu_ind, clusters_ind, X):
 def has_converged(mu_ind, oldmu_ind, X):
     return (set(mu_ind) == set(oldmu_ind))
 
-def find_centers(X, k_Final):
-    k = k_Final*8
 
-    X = X.T
+def find_centers(X, intrinsic_points, k_Final):
+
+    k = k_Final*4
     # Initialize to K random centers
 
     mu_ind = numpy.random.choice(X.shape[0], size=k, replace=False)
 
-    while mu_ind.shape[0]>k_Final:
+    while mu_ind.shape[0] > k_Final:
 
         oldmu_ind = numpy.random.choice(X.shape[0], size=mu_ind.shape[0], replace=False)
 
@@ -227,34 +243,44 @@ def find_centers(X, k_Final):
 
         clusters, clusters_sizes = cluster_points(X, mu_ind)
         cluster_to_remove = numpy.argmin(clusters_sizes)
-        mu_ind = mu_ind[numpy.where(numpy.arange(mu_ind.shape[0])!=cluster_to_remove)]
+        mu_ind = mu_ind[numpy.where(numpy.arange(mu_ind.shape[0]) != cluster_to_remove)]
 
         clusters, clusters_sizes = cluster_points(X, mu_ind)
         mu_ind = reevaluate_centers(mu_ind, clusters, X)
-
         '''
-        X = X.T
-        fig = plt.figure()
-        ax = fig.gca()
-        ax.scatter(X[0, :], X[1, :], c="k")
-        for i_point in range(mu_ind.shape[0]):
-            ax.scatter(X[0, clusters[i_point]], X[1, clusters[i_point]],
-                       color=numpy.random.rand(3, 1))
-            ax.scatter(X[0, mu_ind[i_point]], X[1, mu_ind[i_point]], c='r')
-        plt.axis('equal')
-        plt.show(block=False)
-        X = X.T
+        intrinsic_points = intrinsic_points.T
+
+        if intrinsic_points.shape[1] == 2:
+            fig = plt.figure()
+            ax = fig.gca()
+            for i_point in range(mu_ind.shape[0]):
+                ax.scatter(intrinsic_points[:, 0], intrinsic_points[:, 1], c="k")
+                ax.scatter(intrinsic_points[clusters[i_point], 0], intrinsic_points[clusters[i_point], 1], color=numpy.random.rand(3, 1))
+                ax.scatter(intrinsic_points[mu_ind[i_point], 0], intrinsic_points[mu_ind[i_point], 1], c='r')
+                plt.axis('equal')
+                plt.show(block=False)
+        elif intrinsic_points.shape[1] == 3:
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d', aspect='equal')
+            #ax.scatter(intrinsic_points[:, 0], intrinsic_points[:, 1], intrinsic_points[:, 2], c="k")
+            for i_point in range(mu_ind.shape[0]):
+                ax.scatter(intrinsic_points[clusters[i_point], 0], intrinsic_points[clusters[i_point], 1], intrinsic_points[clusters[i_point], 2], color=numpy.random.rand(3, 1))
+                #ax.scatter(intrinsic_points[mu_ind[i_point], 0], intrinsic_points[mu_ind[i_point], 1], intrinsic_points[mu_ind[i_point], 2], c='k')
+                ax.set_aspect('equal')
+                plt.show(block=False)
+
+        intrinsic_points = intrinsic_points.T
         '''
 
 
     oldmu_ind = numpy.random.choice(X.shape[0], size=mu_ind.shape[0], replace=False)
 
-    while not has_converged(mu_ind, oldmu_ind, X):
-        oldmu_ind = mu_ind
-        # Assign all points in X to clusters
-        clusters, clusters_sizes = cluster_points(X, mu_ind)
-        # Reevaluate centers
-        mu_ind = reevaluate_centers(mu_ind, clusters, X)
+    #while not has_converged(mu_ind, oldmu_ind, X):
+    #    oldmu_ind = mu_ind
+    #    # Assign all points in X to clusters
+    #    clusters, clusters_sizes = cluster_points(X, mu_ind)
+    #    # Reevaluate centers
+    #    mu_ind = reevaluate_centers(mu_ind, clusters, X)
 
     '''
     X = X.T
@@ -270,7 +296,6 @@ def find_centers(X, k_Final):
     X = X.T
     '''
 
-    X = X.T
     return mu_ind, clusters
 
 def init_board(N):

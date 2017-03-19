@@ -68,8 +68,8 @@ while True:
 #numpy.savetxt(sim_dir + '/' + 'movie_mat.txt', movie_frames, delimiter=',')
 #movie_frames = numpy.loadtxt(sim_dir + '/' + 'movie_mat.txt', delimiter=',')
 
-n_pca = 40000
-pca = PCA(n_components=40, whiten=False)
+n_pca = 4000
+pca = PCA(n_components=6, whiten=False)
 pca.fit(movie_frames[0:n_pca, :]-numpy.mean(movie_frames[0:n_pca, :], 0))
 pca_base = pca.components_
 explained_variance = pca.explained_variance_
@@ -86,5 +86,3 @@ min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
 sensor_noisy = min_max_scaler.fit_transform(movie_pca.T)
 
 numpy.savetxt(sim_dir + '/' + 'sensor_noisy.txt', sensor_noisy, delimiter=',')
-
-

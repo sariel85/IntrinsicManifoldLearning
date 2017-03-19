@@ -10,7 +10,7 @@ from non_local_tangent import non_local_tangent_net
 sim_dir_name = "3D Apartment - Static - Color"  #Which dataset to run
 process_mode = "Static"
 
-n_points_used_for_dynamics = 500 #How many points are available from which to infer dynamics
+n_points_used_for_dynamics = 1000 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 1000
 n_points_used_for_metric_plot = 400
 n_points_used_for_clusters = 1000 #How many cluster to use in Kernal method
@@ -175,7 +175,7 @@ dist_mat_local_full = numpy.sqrt(dist_mat_local_full_squared)
 #Keep shortest distances
 dist_mat_true_trimmed = trim_distances(dist_mat_true, n_neighbors=n_neighbors_mds)
 dist_mat_measured_trimmed = trim_distances(dist_mat_measured, n_neighbors=n_neighbors_mds)
-dist_mat_local_trimmed = trim_distances(dist_mat_local, dist_mat_measured, n_neighbors=n_neighbors_mds)
+dist_mat_local_trimmed = trim_distances(dist_mat_local, dist_mat_true, n_neighbors=n_neighbors_mds)
 dist_mat_local_full_trimmed = trim_distances(dist_mat_local_full, n_neighbors=n_neighbors_mds)
 #dist_mat_net_intrinsic_trimmed = trim_distances(dist_mat_net_intrinsic, dist_mat_measured, n_neighbors=n_neighbors_mds)
 

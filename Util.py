@@ -151,12 +151,12 @@ def embbeding_score(ground_truth, embedding, titleStr, n_points = 200):
 # R = 3x3 rotation matrix
 # t = 3x1 column vector
 
-def rigid_transform(A_in, B_in):
-    assert len(A_in) == len(B_in)
+def rigid_transform(A, B):
+    assert len(A) == len(B)
 
-    if A_in.shape[0] == 2:
-        A = numpy.pad(A_in, pad_width=((0, 1), (0, 1)), mode='constant')
-        B = numpy.pad(B_in, pad_width=((0, 1), (0, 1)), mode='constant')
+    if A.shape[0] == 2:
+        A = numpy.pad(A, pad_width=((0, 1), (0, 1)), mode='constant')
+        B = numpy.pad(B, pad_width=((0, 1), (0, 1)), mode='constant')
 
     N = A.shape[1]  # total points
 
@@ -185,7 +185,7 @@ def rigid_transform(A_in, B_in):
     t = -numpy.dot(R, centroid_A.T) + centroid_B.T
 
 
-    if A_in.shape[0] == 2:
+    if A.shape[0] == 2:
         R = R[0:2, 0:2]
         t = t[0:2]
 
