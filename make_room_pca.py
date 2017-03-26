@@ -7,17 +7,18 @@ from sklearn.decomposition.pca import PCA
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 import cv2
+from data_generation import print_process, create_color_map
 
-sim_dir_name = "3D Apartment - Static - Color"
+sim_dir_name = "2D Apartment - Static - Depth"
 sim_dir = './' + sim_dir_name
-video_file = sim_dir + '/' + 'measured_process.avi'
+video_file = sim_dir + '/' + 'video_input.avi'
 
 cap = cv2.VideoCapture(video_file)
 
 n_frames = numpy.int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 frame_hight = numpy.int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 frame_width = numpy.int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-n_pixels = numpy.int(3 * frame_hight * frame_width)
+n_pixels = numpy.int(frame_hight * frame_width)
 
 movie_frames = None
 
@@ -48,11 +49,11 @@ while True:
         else:
             movie_frames[pos_frame, :] = numpy.asarray(dst).reshape([dst.shape[0]*dst.shape[1]*dst.shape[2]])
         pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
-        print(str(pos_frame)+" frames")
+        print(str(pos_frame) + " frames")
     else:
         # The next frame is not ready, so we try to read it again
         cap.set(cv2.CAP_PROP_POS_FRAMES, pos_frame-1)
-        print ("frame is not ready")
+        print("frame is not ready")
         # It is better to wait for a while for the next frame to be ready
         cv2.waitKey(1000)
 
@@ -69,7 +70,7 @@ while True:
 #movie_frames = numpy.loadtxt(sim_dir + '/' + 'movie_mat.txt', delimiter=',')
 
 n_pca = 4000
-pca = PCA(n_components=6, whiten=False)
+pca = PCA(n_components=8, whiten=False)
 pca.fit(movie_frames[0:n_pca, :]-numpy.mean(movie_frames[0:n_pca, :], 0))
 pca_base = pca.components_
 explained_variance = pca.explained_variance_
@@ -82,6 +83,10 @@ pca_base = numpy.loadtxt(sim_dir + '/' + 'pca_vects.txt', delimiter=',')
 
 movie_pca = numpy.dot(numpy.linalg.pinv(pca_base.T), (movie_frames-numpy.mean(movie_frames.T, 1)).T)
 
+intrinsic_process = numpy.loadtxt(sim_dir + '/' + 'intrinsic_process_to_measure.txt', delimiter=',').T
+color_map = create_color_map(intrinsic_process)
+print_process(movie_pca, bounding_shape=None, color_map=color_map, titleStr="Feature Space")
+plt.show(block=False)
 min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
 sensor_noisy = min_max_scaler.fit_transform(movie_pca.T)
 

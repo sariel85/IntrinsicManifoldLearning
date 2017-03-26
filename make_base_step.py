@@ -6,7 +6,7 @@ from data_generation import print_process, create_color_map
 import numpy
 import matplotlib.pyplot as plt
 
-sim_dir_name = "3D Apartment - Static - Color Camera2"
+sim_dir_name = "2D Apartment - Static - Base"
 process_mode = "Static"
 
 #sim_dir_name = "2D Room - Exact Limits - More Points - No Override"

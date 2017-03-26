@@ -7,14 +7,14 @@ from TCIE_helpers import multiscale_isomaps
 
 from non_local_tangent import non_local_tangent_net
 ###Settings#############################################################################################################
-sim_dir_name = "3D Apartment - Static - Color"  #Which dataset to run
+sim_dir_name = "2D Apartment - Static - Depth"  #Which dataset to run
 process_mode = "Static"
 
-n_points_used_for_dynamics = 1000 #How many points are available from which to infer dynamics
-n_points_used_for_plotting_dynamics = 1000
+n_points_used_for_dynamics = 3000 #How many points are available from which to infer dynamics
+n_points_used_for_plotting_dynamics = 400
 n_points_used_for_metric_plot = 400
-n_points_used_for_clusters = 1000 #How many cluster to use in Kernal method
-n_points_used_for_clusters_2 = 1000 #How many cluster to use in Kernal method
+n_points_used_for_clusters = 3000 #How many cluster to use in Kernal method
+n_points_used_for_clusters_2 = 3000 #How many cluster to use in Kernal method
 
 n_neighbors_cov = 40 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 20 #How many short distances are kept for each cluster point
@@ -209,7 +209,7 @@ dist_mat_local_geo = dist_mat_local_geo[points_used_for_clusters_indexs_2, :][:,
 dist_mat_local_trimmed = trim_distances(dist_mat_local_geo, n_neighbors=n_neighbors_mds)
 dist_mat_true_trimmed = trim_distances(dist_mat_true, n_neighbors=n_neighbors_mds)
 
-mds = manifold.MDS(n_components=3, max_iter=2000, eps=1e-5, dissimilarity="precomputed", n_jobs=1, n_init=1)
+mds = manifold.MDS(n_components=dim_intrinsic, max_iter=200, eps=1e-5, dissimilarity="precomputed", n_jobs=1, n_init=1)
 
 iso_embedding_local = multiscale_isomaps(dist_mat_local_geo, dist_mat_local_trimmed, intrinsic_process_clusters_2, dim_intrinsic=dim_intrinsic)
 iso_embedding_local_non_corected = mds.fit(dist_mat_local_geo).embedding_.T

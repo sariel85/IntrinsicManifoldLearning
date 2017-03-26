@@ -41,7 +41,9 @@ def create_color_map(intrinsic_process, bounding_shape=None):
         return None
     # return matplotlib.colors.ColorConverter.to_rgb(arg=color_map)
 
+
 def angle_from_cov(cov_mat):
+
     U, s, V = numpy.linalg.svd(cov_mat)
     width = numpy.sqrt(s[0])
     height = numpy.sqrt(s[1])
