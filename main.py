@@ -10,11 +10,11 @@ from non_local_tangent import non_local_tangent_net
 sim_dir_name = "2D Apartment - Static - Depth"  #Which dataset to run
 process_mode = "Static"
 
-n_points_used_for_dynamics = 3000 #How many points are available from which to infer dynamics
+n_points_used_for_dynamics = 2000 #How many points are available from which to infer dynamics
 n_points_used_for_plotting_dynamics = 400
 n_points_used_for_metric_plot = 400
-n_points_used_for_clusters = 3000 #How many cluster to use in Kernal method
-n_points_used_for_clusters_2 = 3000 #How many cluster to use in Kernal method
+n_points_used_for_clusters = 2000 #How many cluster to use in Kernal method
+n_points_used_for_clusters_2 = 2000 #How many cluster to use in Kernal method
 
 n_neighbors_cov = 40 #How neighboors to use from which to infer dynamics locally
 n_neighbors_mds = 20 #How many short distances are kept for each cluster point

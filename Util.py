@@ -152,9 +152,11 @@ def embbeding_score(ground_truth, embedding, titleStr, n_points = 200):
 # t = 3x1 column vector
 
 def rigid_transform(A, B):
+    dim = A.shape[0]
+
     assert len(A) == len(B)
 
-    if A.shape[0] == 2:
+    if dim == 2:
         A = numpy.pad(A, pad_width=((0, 1), (0, 1)), mode='constant')
         B = numpy.pad(B, pad_width=((0, 1), (0, 1)), mode='constant')
 
@@ -184,8 +186,7 @@ def rigid_transform(A, B):
         R = numpy.dot(Vt.T, U.T)
     t = -numpy.dot(R, centroid_A.T) + centroid_B.T
 
-
-    if A.shape[0] == 2:
+    if dim == 2:
         R = R[0:2, 0:2]
         t = t[0:2]
 
