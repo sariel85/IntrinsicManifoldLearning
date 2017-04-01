@@ -6,15 +6,17 @@ from sklearn import manifold
 
 def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrinsic=2):
 
+    dist_mat_intrinsic = numpy.copy(dist_mat_trimmed, order='C')
+
+    n_points = dist_mat.shape[0]
     n_clusters = 5
-    sigma = numpy.median(dist_mat[:])/30
+    n_neighbors_step = 200
+    sigma = numpy.median(dist_mat[:])/10
     t = 40
     diff_embedding_dim = 3
 
-    dist_mat_intrinsic = numpy.copy(dist_mat)
-
-    dist_mat_rbf = numpy.exp(-(dist_mat_intrinsic**2)/(2*(sigma**2)))
-    dist_mat_rbf[dist_mat_rbf < 1e-3] = 0
+    dist_mat_rbf = numpy.exp(-(dist_mat**2)/(2*(sigma**2)))
+    dist_mat_rbf[dist_mat_rbf < 1e-2] = 0
     row_sum = numpy.sum(dist_mat_rbf, axis=1)
     transition_prob = numpy.dot(numpy.diag(1/row_sum), dist_mat_rbf)
     #transition_prob = numpy.dot(numpy.diag(1/row_sum), transition_prob)
@@ -36,37 +38,42 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
     U = numpy.real(U)
 
     diff_embedding = numpy.dot(U[:, 1:diff_embedding_dim+1], numpy.sqrt(numpy.diag(S[1:diff_embedding_dim+1]**t)))
+    dist_diff = scipy.spatial.distance.cdist(diff_embedding, diff_embedding, metric='euclidean', p=2,
+                                                V=None, VI=None, w=None)
+
     #diff_embedding = numpy.array(diff_embedding.todense())
-    row_sum = numpy.sum(diff_embedding, axis=1)
+    #row_sum = numpy.sum(diff_embedding, axis=1)
 
     (mu, clusters) = find_centers(diff_embedding, intrinsic_points, n_clusters)
 
     fig = plt.figure()
     ax = fig.gca()
     ax.scatter(intrinsic_points[0, :], intrinsic_points[1, :], c="k")
+
+    color_list = numpy.zeros((3, mu.shape[0]))
     for i_point in range(mu.shape[0]):
-        ax.scatter(intrinsic_points[0, clusters[i_point]], intrinsic_points[1, clusters[i_point]], color=numpy.random.rand(3, 1))
+        color_list[:, i_point] = numpy.random.rand(3, 1).T
+        ax.scatter(intrinsic_points[0, clusters[i_point]], intrinsic_points[1, clusters[i_point]], color=color_list[:, i_point])
         ax.scatter(intrinsic_points[0, mu[i_point]], intrinsic_points[1, mu[i_point]], c='r')
     plt.axis('equal')
     plt.show(block=False)
+    run = 0
+    while run < 1:
 
-    for i_point in range(mu.shape[0]):
+        dist_mat_intrinsic_geo = scipy.sparse.csgraph.shortest_path(dist_mat_intrinsic, directed=False)
 
-        clusters_ind = clusters[i_point]
+        #n_neighbors_start = clusters_ind.__len__()
 
-        #knn_indexes = numpy.argsort(dist_mat[mu[i_point], clusters_ind], kind='quicksort')
+        #rank_check_list = []
+        #n_neighbors_list = []
 
-        n_neighbors_start = clusters_ind.__len__()
-        n_neighbors_step = 50
+        for i_cluster in range(mu.shape[0]):
 
-        n_neighbors = n_neighbors_start
+            clusters_ind = clusters[i_cluster]
 
-        rank_check_list = []
-        n_neighbors_list = []
+            n_neighbors = clusters_ind.__len__()
 
-        while n_neighbors <= clusters_ind.__len__():
-
-            dist_mat_sub = dist_mat[clusters_ind, :][:, clusters_ind]
+            dist_mat_sub = dist_mat_intrinsic_geo[clusters_ind, :][:, clusters_ind]
             dist_mat_trimmed_sub = dist_mat_trimmed[clusters_ind, :][:, clusters_ind]
 
             dist_mat_sub_squared = dist_mat_sub ** 2
@@ -90,11 +97,11 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
             #eigen_vect = eigen_vect[:dim_intrinsic].T
             eigen_vect = numpy.dot(eigen_vect, numpy.diag(numpy.sqrt(eigen_val[:dim_intrinsic]))).T
 
-            mds = manifold.MDS(n_components=dim_intrinsic, max_iter=200, eps=1e-3, dissimilarity="precomputed", n_jobs=1, n_init=1)
+            mds = manifold.MDS(n_components=dim_intrinsic, max_iter=2000, eps=1e-6, dissimilarity="precomputed", n_jobs=1, n_init=1)
             iso_embedding = mds.fit(dist_mat_sub, init=eigen_vect.T).embedding_.T
 
-            mds = manifold.MDS(n_components=dim_intrinsic, max_iter=200, eps=1e-3, dissimilarity="precomputed", n_jobs=1, n_init=1)
-            iso_embedding_no_geo = mds.fit(dist_mat_sub, init=iso_embedding.T, weight=(dist_mat_trimmed_sub != 0)).embedding_.T
+            mds = manifold.MDS(n_components=dim_intrinsic, max_iter=2000, eps=1e-6, dissimilarity="precomputed", n_jobs=1, n_init=1)
+            iso_embedding_no_geo = mds.fit(dist_mat_trimmed_sub, init=iso_embedding.T, weight=(dist_mat_trimmed_sub != 0)).embedding_.T
 
             #expl = numpy.sum(eigen_val[:dim_intrinsic])
             #res = numpy.sum(eigen_val[dim_intrinsic:])
@@ -114,37 +121,49 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
             '''
             fig = plt.figure()
             ax = fig.gca()
-            ax.scatter(iso_embedding[0, :], iso_embedding[1, :], c="k")
-            ax.scatter(iso_embedding[0, :], iso_embedding[1, :], c='r')
-            ax.scatter(iso_embedding[0, 0], iso_embedding[1, 0], c='g')
+            ax.scatter(iso_embedding[0, :], iso_embedding[1, :], color=color_list[:, i_cluster])
             plt.axis('equal')
+            plt.title('Intrinsic Isomap - Patch')
 
             fig = plt.figure()
             ax = fig.gca()
-            ax.scatter(iso_embedding_no_geo[0, :], iso_embedding_no_geo[1, :], c="k")
-            ax.scatter(iso_embedding_no_geo[0, :], iso_embedding_no_geo[1, :], c='r')
-            ax.scatter(iso_embedding_no_geo[0, 0], iso_embedding_no_geo[1, 0], c='g')
+            ax.scatter(iso_embedding_no_geo[0, :], iso_embedding_no_geo[1, :], color=color_list[:, i_cluster])
             plt.axis('equal')
+            plt.title('Corrected Intrinsic Isomap - Patch')
+
+            plt.show(block=False)
+
             '''
             fig = plt.figure()
             ax = fig.gca()
             ax.scatter(intrinsic_points[0, :], intrinsic_points[1, :], c="k")
             for j_point in clusters_ind:
                 ax.scatter(intrinsic_points[0, j_point], intrinsic_points[1, j_point], c='r')
-            ax.scatter(intrinsic_points[0, mu[i_point]],
-                       intrinsic_points[1, mu[i_point]], c='g')
+            ax.scatter(intrinsic_points[0, mu[i_cluster]],
+                       intrinsic_points[1, mu[i_cluster]], c='g')
             plt.axis('equal')
 
             plt.figure()
             plt.plot(numpy.asarray(n_neighbors_list), numpy.asarray(rank_check_list))
             plt.show(block=False)
             '''
-            n_neighbors = n_neighbors + n_neighbors_step
 
             dist_new_sub = scipy.spatial.distance.cdist(iso_embedding_no_geo.T, iso_embedding_no_geo.T, metric='euclidean', p=2, V=None, VI=None, w=None)
-            dist_mat_intrinsic[clusters_ind, :][:, clusters_ind] = dist_new_sub[:, :]
+            X, Y = numpy.meshgrid(clusters_ind, clusters_ind)
+            X = numpy.ndarray.flatten(X)
+            Y = numpy.ndarray.flatten(Y)
+            X_1, Y_1 = numpy.meshgrid(range(clusters_ind.__len__()), range(clusters_ind.__len__()))
+            X_1 = numpy.ndarray.flatten(X_1)
+            Y_1 = numpy.ndarray.flatten(Y_1)
+            dist_mat_intrinsic[X, Y] = dist_new_sub[X_1, Y_1]
+            indx = numpy.argsort(numpy.min(dist_diff[clusters_ind, :], axis=0))
+            clusters[i_cluster] = numpy.ndarray.tolist(indx[:numpy.min([n_neighbors+n_neighbors_step, n_points])])
 
-    dist_mat_intrinsic = dist_mat_intrinsic.copy(order='C')
+        run = run+1
+        #Expand Neighborhoods
+
+
+
     dist_mat_intrinsic = scipy.sparse.csgraph.shortest_path(dist_mat_intrinsic, directed=False)
     dist_mat_sub_squared = dist_mat_intrinsic ** 2
 
@@ -168,8 +187,8 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
     eigen_vect = eigen_vect[:, eigen_val_sort_ind]
     eigen_vect = numpy.dot(eigen_vect, numpy.diag(numpy.sqrt(eigen_val[:dim_intrinsic]))).T
 
-    mds = manifold.MDS(n_components=dim_intrinsic, max_iter=50, eps=1e-3, dissimilarity="precomputed", n_jobs=1, n_init=1)
-    iso_embedding_no_geo = mds.fit(dist_mat, init=eigen_vect.T, weight=(dist_mat_trimmed != 0)).embedding_.T
+    mds = manifold.MDS(n_components=dim_intrinsic, max_iter=500, eps=1e-10, dissimilarity="precomputed", n_jobs=1, n_init=1)
+    iso_embedding_no_geo = mds.fit(dist_mat_trimmed, init=eigen_vect.T, weight=(dist_mat_trimmed != 0)).embedding_.T
 
     #expl = numpy.sum(eigen_val[:dim_intrinsic])
 
@@ -177,23 +196,21 @@ def multiscale_isomaps(dist_mat, dist_mat_trimmed, intrinsic_points, dim_intrins
 
     #n_neighbors_list.append(n_neighbors)
 
-    '''
+
     fig = plt.figure()
     ax = fig.gca()
     ax.scatter(eigen_vect[0, :], eigen_vect[1, :], c="k")
     ax.scatter(eigen_vect[0, :], eigen_vect[1, :], c='r')
-    ax.scatter(eigen_vect[0, 0], eigen_vect[1, 0], c='g')
     plt.axis('equal')
 
     fig = plt.figure()
     ax = fig.gca()
     ax.scatter(iso_embedding_no_geo[0, :], iso_embedding_no_geo[1, :], c="k")
     ax.scatter(iso_embedding_no_geo[0, :], iso_embedding_no_geo[1, :], c='r')
-    ax.scatter(iso_embedding_no_geo[0, 0], iso_embedding_no_geo[1, 0], c='g')
     plt.axis('equal')
 
     plt.show(block=False)
-    '''
+
 
     return iso_embedding_no_geo
 

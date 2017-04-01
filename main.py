@@ -10,10 +10,10 @@ from non_local_tangent import non_local_tangent_net
 sim_dir_name = "2D Apartment - Static - Depth"  #Which dataset to run
 process_mode = "Static"
 
-n_points_used_for_dynamics = 2000 #How many points are available from which to infer dynamics
-n_points_used_for_plotting_dynamics = 400
-n_points_used_for_metric_plot = 400
-n_points_used_for_clusters = 2000 #How many cluster to use in Kernal method
+n_points_used_for_dynamics = 3000 #How many points are available from which to infer dynamics
+n_points_used_for_plotting_dynamics = 3000
+n_points_used_for_metric_plot = 3000
+n_points_used_for_clusters = 3000 #How many cluster to use in Kernal method
 n_points_used_for_clusters_2 = 2000 #How many cluster to use in Kernal method
 
 n_neighbors_cov = 40 #How neighboors to use from which to infer dynamics locally
@@ -30,7 +30,7 @@ intrinsic_process = numpy.loadtxt(sim_dir + '/' + 'intrinsic_used.txt', delimite
 noisy_sensor_measured = numpy.loadtxt(sim_dir + '/' + 'sensor_noisy.txt', delimiter=',', dtype=dtype).T
 intrinsic_variance = numpy.load(sim_dir + '/' + 'intrinsic_variance.npy').astype(dtype=dtype)
 #measurement_variance = numpy.load(sim_dir + '/' + 'measurement_variance.npy').astype(dtype=dtype)
-measurement_variance = 0.01
+measurement_variance = 0.0001 #TODO
 #dist_potential = numpy.loadtxt(sim_dir + '/' + 'dist_potential_used.txt', delimiter=',', dtype=dtype)
 
 dim_intrinsic = intrinsic_process.shape[0]
@@ -71,14 +71,12 @@ else:
     assert()
 
 n_points = intrinsic_process.shape[1]
+color_map = create_color_map(intrinsic_process)
+
 
 n_points_used_for_plotting_dynamics = min(n_points, n_points_used_for_plotting_dynamics)
 points_dynamics_plot_index = numpy.random.choice(n_points, size=n_points_used_for_plotting_dynamics, replace=False)
-
-color_map = create_color_map(intrinsic_process)
-
 print_process(intrinsic_process, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Intrinsic Space")
-
 print_process(noisy_sensor, indexs=points_dynamics_plot_index, bounding_shape=None, color_map=color_map, titleStr="Observed Space")
 
 '''
@@ -130,9 +128,7 @@ elif process_mode == "Dynamic":
 else:
     assert()
 
-
 n_points_used_for_clusters = intrinsic_process_clusters.shape[1]
-
 color_map_clusters = color_map[points_used_for_clusters_indexs, :]
 
 #test_ml(noisy_sensor_clusters, intrinsic_process_clusters, n_neighbors=n_neighbors_mds, n_components=dim_intrinsic, color=color_map_clusters)
@@ -152,9 +148,9 @@ net_drift = get_drift_from_net(non_local_tangent_net_instance, noisy_sensor_clus
 print_drift(noisy_sensor_clusters, net_drift*5, titleStr="Net Learned Drift")
 '''
 
+# Metric plot
 n_points_used_for_metric_plot = min(n_points_used_for_clusters, n_points_used_for_metric_plot)
 points_used_for_metric_plot_indexs = numpy.random.choice(n_points_used_for_metric_plot, size=n_points_used_for_metric_plot, replace=False)
-
 print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Tangent Metric of Observed Space", scale=200*intrinsic_variance, space_mode=True, elipse=True, color_map=color_map_clusters, points_used_for_clusters_indexs=points_used_for_metric_plot_indexs)
 print_metrics(noisy_sensor_clusters, metric_list_def, intrinsic_dim=dim_intrinsic, titleStr="Locally Estimated Push-Forward Metric", scale=6*intrinsic_variance, space_mode=False, elipse=True, color_map=color_map_clusters, points_used_for_clusters_indexs=points_used_for_metric_plot_indexs)
 #print_metrics(noisy_sensor_clusters, metric_list_net_tangent, intrinsic_dim=dim_intrinsic, titleStr="Net Learned Tangent Space", scale=200*intrinsic_variance, space_mode=True, elipse=True, color_map=color_map_clusters, points_used_for_clusters_indexs=points_used_for_metric_plot_indexs)
